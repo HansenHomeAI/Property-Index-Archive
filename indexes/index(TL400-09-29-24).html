@@ -23,10 +23,99 @@
             background: linear-gradient(to top, black 0%, transparent 12%);
             mix-blend-mode: multiply;
         }
+        .menu-container {
+            display: flex;
+            width: fit-content;
+            min-height: 59px;
+            padding: 7px;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 1px;
+            border-radius: 30px;
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(128, 128, 128, 0.30);
+            -webkit-backdrop-filter: blur(50px);
+            backdrop-filter: blur(50px);
+            -webkit-transform-origin: left bottom;
+            transform-origin: left bottom;
+            box-sizing: border-box;
+        }
+        .menu-container::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: inherit;
+            background: linear-gradient(145deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 41%, rgba(255,255,255,0) 57%, rgba(255,255,255,0.4) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            padding: 1.4px;
+            pointer-events: none;
+        }
+        .menu-button {
+            width: 45px;
+            height: 45px;
+            position: relative;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 23.5px;
+            cursor: pointer;
+            overflow: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+            box-sizing: border-box;
+        }
+        .menu-button img, .menu-button svg {
+            width: 21px;
+            height: 21px;
+            position: relative;
+            z-index: 1;
+            pointer-events: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        @media (hover:hover) {
+            .menu-button:hover::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.15);
+                transform: scale(1);
+                transition: transform 0.3s ease, opacity 0.3s ease;
+                opacity: 1;
+                z-index: 0;
+            }
+        }
+        .menu-button::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            transform: scale(0);
+            opacity: 0;
+            z-index: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .menu-button.active::before {
+            transform: scale(1);
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
     <div id="vignette"></div>
+    <div class="menu-container" id="menuContainer">
+        <div id="compassButton" class="menu-button">
+            <img id="compassIcon" src="https://raw.githubusercontent.com/HansenHomeAI/FigmaSVGButtons/main/NorthOutline.svg" alt="Compass" draggable="false">
+        </div>
+    </div>
     <div id="overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; color: white; font-size: 24px; font-family: Arial, sans-serif;">Lot #1</div>
     <script type="importmap">
     {
@@ -230,16 +319,35 @@ if (camera.position.distanceTo(sceneCenter) > maxDistance) {
 
         });
 
-        let splat = new LumaSplatsThree({
+        const splatOptions = {
     source: 'https://lumalabs.ai/embed/b5e72d11-691d-4104-aba1-5591bd953bf8?mode=sparkles&background=%23ffffff&color=%23000000&showTitle=true&loadBg=true&logoPosition=bottom-left&infoPosition=bottom-right&cinematicVideo=undefined&showMenu=false',
     particleRevealEnabled: true,
     particleRevealDuration: 3.33 // Speed up by 50%
-});
+};
 
+        let splat = new LumaSplatsThree(splatOptions);
 // Apply depth testing and lower render order for the splat
 splat.material.depthTest = true;
 splat.renderOrder = 999;  // Ensure the splat is rendered before the border
 scene.add(splat);
+
+        function replaySplatReveal() {
+            const prev = splat;
+            const pos = prev.position.clone();
+            const rot = prev.rotation.clone();
+            const scl = prev.scale.clone();
+            scene.remove(prev);
+            if (typeof prev.dispose === 'function') {
+                try { prev.dispose(); } catch (e) { /* best-effort */ }
+            }
+            splat = new LumaSplatsThree(splatOptions);
+            splat.material.depthTest = true;
+            splat.renderOrder = 999;
+            splat.position.copy(pos);
+            splat.rotation.copy(rot);
+            splat.scale.copy(scl);
+            scene.add(splat);
+        }
 
 
 
@@ -421,34 +529,81 @@ function createHotspot(hotspotConfig, index, totalHotspots) {
 
 
         
-
+        
         let angle = 0;
         let autoRotate = parameters.animation.autoRotate;
-
-        function animate() {
-    if (autoRotate) {
-        angle += parameters.animation.speed;
-        camera.position.x = Math.sin(angle) * parameters.animation.startRadius;
-        camera.position.z = Math.cos(angle) * parameters.animation.startRadius;
-        camera.lookAt(scene.position); // Ensure the camera always looks at the scene
-    }
-
-    // Make sure each text plane faces the camera
-    hotspots.forEach(hotspot => {
-        hotspot.textPlane.lookAt(camera.position);
-    });
-
-    controls.update();
-    renderer.render(scene, camera);
-    requestAnimationFrame(animate);
-}
-
         
+        function animate(now = performance.now()) {
+            if (window.__pathAnimation) {
+                if (window.__pathAnimationLastTime == null) window.__pathAnimationLastTime = now;
+                const deltaSeconds = Math.min((now - window.__pathAnimationLastTime) / 1000, 0.1);
+                window.__pathAnimationLastTime = now;
+                window.__pathAnimation.update(deltaSeconds);
+            }
 
-controls.addEventListener('start', () => autoRotate = false);
+            if (autoRotate && (!window.__pathAnimation || !window.__pathAnimation.getState().playing)) {
+                angle += parameters.animation.speed;
+                camera.position.x = Math.sin(angle) * parameters.animation.startRadius;
+                camera.position.z = Math.cos(angle) * parameters.animation.startRadius;
+                camera.lookAt(scene.position); // Ensure the camera always looks at the scene
+            }
+            
+            // Make sure each text plane faces the camera
+            hotspots.forEach(hotspot => {
+                hotspot.textPlane.lookAt(camera.position);
+            });
+            
+            controls.update();
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        
+        
+        
+        controls.addEventListener('start', () => autoRotate = false);
         window.addEventListener('touchstart', () => autoRotate = false);
-
+        
         animate();
+
+        // Path animation (flight path + editor + recording) - shared module
+        import('../shared/path-animation.mjs').then(({ initPathAnimation }) => {
+            const menuContainerEl = document.getElementById('menuContainer');
+            window.__pathAnimation = initPathAnimation({
+                camera,
+                controls,
+                renderer,
+                sceneOrigin: parameters.scene.origin,
+                startPosition: parameters.camera.startPosition,
+                menuContainer: menuContainerEl,
+                propertyLabel: 'TL400',
+                onRecordStart: replaySplatReveal
+            });
+        }).catch(err => console.warn('Path animation failed to load', err));
+
+    import('../shared/obj-home-editor.mjs').then(({ initObjHomeEditor }) => {
+        window.__homeEditor = initObjHomeEditor({
+            scene,
+            camera,
+            controls,
+            renderer,
+            propertyLabel: 'TL400'
+        });
+    }).catch(err => console.warn('Home model editor failed to load', err));
+
+    // Compass button: restart flight path if available
+    const compassButton = document.getElementById('compassButton');
+    if (compassButton) {
+        compassButton.addEventListener('mouseup', () => {
+            if (window.__pathAnimation) {
+                const state = window.__pathAnimation.getState();
+                const checkpoints = state.pathState && state.pathState.checkpoints ? state.pathState.checkpoints : [];
+                if (checkpoints.length >= 2) {
+                    window.__pathAnimation.goToAnimationStart();
+                    return;
+                }
+            }
+        });
+    }
     </script>
     <script>
 
@@ -489,5 +644,6 @@ function animate() {
 
     </script>
 
+<script type="module" src="../shared/properties-nav.mjs"></script>
 </body>
 </html>

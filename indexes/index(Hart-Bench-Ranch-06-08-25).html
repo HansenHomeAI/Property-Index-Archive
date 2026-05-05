@@ -121,8 +121,8 @@
         /* Parent Menu (default base values) */
         .menu-container {
             display: flex;
-            width: 105px;
-            height: 59px;
+            width: fit-content;
+            min-height: 59px;
             padding: 7px;
             justify-content: center;
             align-items: flex-start;
@@ -930,6 +930,47 @@ Hart Bench Ranch provides a rare opportunity to own a complete yet manageable op
         splat2.visible = false;
     }
 
+    function replaySplatReveal() {
+        const v1 = splat.visible;
+        const v2 = splat2.visible;
+        const p1 = splat.position.clone();
+        const r1 = splat.rotation.clone();
+        const s1 = splat.scale.clone();
+        const p2 = splat2.position.clone();
+        const r2 = splat2.rotation.clone();
+        const s2 = splat2.scale.clone();
+        scene.remove(splat);
+        if (typeof splat.dispose === 'function') { try { splat.dispose(); } catch (e) { /* best-effort */ } }
+        scene.remove(splat2);
+        if (typeof splat2.dispose === 'function') { try { splat2.dispose(); } catch (e) { /* best-effort */ } }
+        splat = new LumaSplatsThree({
+            source: splatConfigs.splat1.source,
+            particleRevealEnabled: true,
+            particleRevealDuration: 3.33
+        });
+        splat.material.depthTest = true;
+        splat.renderOrder = 999;
+        splat.position.copy(p1);
+        splat.rotation.copy(r1);
+        splat.scale.copy(s1);
+        splat.visible = v1;
+        scene.add(splat);
+        splat2 = new LumaSplatsThree({
+            source: splatConfigs.splat2.source,
+            particleRevealEnabled: true,
+            particleRevealDuration: 3.33
+        });
+        splat2.material.depthTest = true;
+        splat2.renderOrder = 999;
+        splat2.position.copy(p2);
+        splat2.rotation.copy(r2);
+        splat2.scale.copy(s2);
+        splat2.visible = v2;
+        scene.add(splat2);
+        splats.splat1 = splat;
+        splats.splat2 = splat2;
+    }
+
     // TapDots Logic
     let tapDots = [];
     const textureLoader = new TextureLoader();
@@ -1365,7 +1406,14 @@ Hart Bench Ranch provides a rare opportunity to own a complete yet manageable op
     }
 
     function animate() {
-        if (autoRotate) {
+        const now = performance.now();
+        if (window.__pathAnimation) {
+            if (window.__pathAnimationLastTime == null) window.__pathAnimationLastTime = now;
+            const deltaSec = Math.min((now - window.__pathAnimationLastTime) / 1000, 0.1);
+            window.__pathAnimationLastTime = now;
+            window.__pathAnimation.update(deltaSec);
+        }
+        if (autoRotate && (!window.__pathAnimation || !window.__pathAnimation.getState().playing)) {
         angle += parameters.animation.speed;
         const c = parameters.animation.center;
 
@@ -1460,6 +1508,31 @@ Hart Bench Ranch provides a rare opportunity to own a complete yet manageable op
     if (iconsToLoad.length === 0) {
         animate();
     }
+
+    // Path animation (flight path + editor + recording) - shared module
+    import('../shared/path-animation.mjs').then(({ initPathAnimation }) => {
+        const menuContainerEl = document.getElementById('menuContainer');
+        window.__pathAnimation = initPathAnimation({
+            camera,
+            controls,
+            renderer,
+            sceneOrigin: parameters.scene.origin,
+            startPosition: parameters.camera.startPosition,
+            menuContainer: menuContainerEl,
+            propertyLabel: 'Hart-Bench-Ranch',
+            onRecordStart: replaySplatReveal
+        });
+    }).catch(err => console.warn('Path animation failed to load', err));
+
+    import('../shared/obj-home-editor.mjs').then(({ initObjHomeEditor }) => {
+        window.__homeEditor = initObjHomeEditor({
+            scene,
+            camera,
+            controls,
+            renderer,
+            propertyLabel: 'Hart-Bench-Ranch'
+        });
+    }).catch(err => console.warn('Home model editor failed to load', err));
 
     // Hart Bench Ranch UI JavaScript - Ported with Extreme Care
     
@@ -1640,8 +1713,16 @@ Hart Bench Ranch provides a rare opportunity to own a complete yet manageable op
         }
     });
 
-    // Add click listener for compass button
+    // Add click listener for compass button: restart flight path if available, else animate to north
     compassButton.addEventListener('mouseup', () => {
+        if (window.__pathAnimation) {
+            const state = window.__pathAnimation.getState();
+            const checkpoints = state.pathState && state.pathState.checkpoints ? state.pathState.checkpoints : [];
+            if (checkpoints.length >= 2) {
+                window.__pathAnimation.goToAnimationStart();
+                return;
+            }
+        }
         console.log('Compass clicked - animating to north');
         animateCameraToNorth();
     });
@@ -1820,5 +1901,6 @@ Hart Bench Ranch provides a rare opportunity to own a complete yet manageable op
     applyLayoutMode();
     
     </script>
+<script type="module" src="../shared/properties-nav.mjs"></script>
 </body>
 </html>
