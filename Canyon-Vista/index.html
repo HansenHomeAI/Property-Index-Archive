@@ -1507,6 +1507,379 @@
             color: #10371f;
             background: #38f07a;
         }
+        #roomLookupPanel,
+        #stackUnitSearchPanel {
+            display: none;
+        }
+        .renter-floorplan-panel {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 12;
+            width: 372px;
+            max-width: calc(100vw - 24px);
+            max-height: calc(100vh - 112px);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 14px;
+            box-sizing: border-box;
+            border-radius: 22px;
+            color: rgba(255, 255, 255, 0.94);
+            background: rgba(28, 34, 36, 0.48);
+            -webkit-backdrop-filter: blur(44px);
+            backdrop-filter: blur(44px);
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            pointer-events: auto;
+            box-shadow: 0 18px 52px rgba(0, 0, 0, 0.28);
+        }
+        .renter-floorplan-panel.collapsed {
+            width: 318px;
+        }
+        .renter-floorplan-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0) 42%, rgba(255, 255, 255, 0) 58%, rgba(255, 255, 255, 0.34) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            padding: 1.4px;
+            pointer-events: none;
+        }
+        .renter-floorplan-panel > * {
+            position: relative;
+            z-index: 1;
+        }
+        .renter-floorplan-title {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .renter-floorplan-title h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: 0;
+        }
+        .renter-floorplan-count {
+            font-size: 12px;
+            line-height: 1.2;
+            color: rgba(255, 255, 255, 0.66);
+            white-space: nowrap;
+        }
+        .bed-filter-tabs {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 6px;
+        }
+        .bed-filter-tab {
+            height: 34px;
+            border: 0;
+            border-radius: 17px;
+            padding: 0 8px;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.82);
+            background: rgba(255, 255, 255, 0.13);
+            font: 700 12px/34px "Helvetica Neue", Arial, sans-serif;
+        }
+        .bed-filter-tab.active {
+            color: #10251b;
+            background: #72f59b;
+        }
+        .floorplan-results {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+        .renter-floorplan-panel.collapsed .bed-filter-tabs,
+        .renter-floorplan-panel.collapsed .renter-floorplan-count {
+            display: none;
+        }
+        .floorplan-card {
+            display: grid;
+            grid-template-columns: 92px minmax(0, 1fr);
+            gap: 11px;
+            min-height: 94px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 8px;
+            padding: 8px;
+            box-sizing: border-box;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.1);
+            text-align: left;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+        }
+        .floorplan-card:hover,
+        .floorplan-card.active {
+            border-color: rgba(114, 245, 155, 0.86);
+            background: rgba(114, 245, 155, 0.17);
+        }
+        .renter-floorplan-panel.collapsed .floorplan-card {
+            min-height: 86px;
+        }
+        .floorplan-thumb {
+            width: 92px;
+            height: 78px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.86);
+            object-fit: contain;
+        }
+        .floorplan-thumb-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(20, 26, 28, 0.58);
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .floorplan-card-body {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+        }
+        .floorplan-name {
+            font-size: 15px;
+            font-weight: 750;
+            line-height: 1.18;
+        }
+        .floorplan-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            font-size: 12px;
+            line-height: 1.2;
+            color: rgba(255, 255, 255, 0.72);
+        }
+        .floorplan-availability {
+            width: fit-content;
+            border-radius: 999px;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 750;
+            line-height: 1;
+            color: #0f2a1b;
+            background: #72f59b;
+        }
+        .renter-floorplan-status {
+            min-height: 15px;
+            font-size: 12px;
+            line-height: 1.25;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .change-floorplan-button {
+            width: fit-content;
+            min-height: 32px;
+            border: 0;
+            border-radius: 999px;
+            padding: 0 13px;
+            cursor: pointer;
+            color: #10251b;
+            background: #72f59b;
+            font: 750 12px/32px "Helvetica Neue", Arial, sans-serif;
+        }
+        .available-unit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+        .available-unit-card {
+            width: 100%;
+            min-height: 42px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 8px;
+            padding: 7px 10px;
+            box-sizing: border-box;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.94);
+            background: rgba(20, 20, 20, 0.36);
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            text-align: left;
+        }
+        .available-unit-card:hover,
+        .available-unit-card.active {
+            border-color: rgba(114, 245, 155, 0.88);
+            background: rgba(114, 245, 155, 0.18);
+        }
+        .available-unit-number {
+            display: inline-flex;
+            min-width: 66px;
+            min-height: 29px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: #fff;
+            background: rgba(20, 20, 20, 0.58);
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.72);
+            font: 800 17px/1 "Helvetica Neue", Arial, sans-serif;
+        }
+        .available-unit-price {
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.76);
+            white-space: nowrap;
+        }
+        .unit-detail-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 40;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.46);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            pointer-events: auto;
+        }
+        .unit-detail-backdrop.active {
+            display: flex;
+        }
+        .unit-detail-modal {
+            width: min(780px, calc(100vw - 32px));
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+            border-radius: 8px;
+            background: rgba(246, 246, 243, 0.96);
+            color: #3f4648;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+            font-family: "Helvetica Neue", Arial, sans-serif;
+        }
+        .unit-detail-close {
+            position: sticky;
+            top: 10px;
+            float: right;
+            width: 34px;
+            height: 34px;
+            margin: 10px 10px 0 0;
+            border: 0;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #303638;
+            background: rgba(255, 255, 255, 0.82);
+            font: 500 22px/34px "Helvetica Neue", Arial, sans-serif;
+            z-index: 2;
+        }
+        .unit-detail-content {
+            padding: 30px;
+        }
+        .unit-detail-image {
+            display: block;
+            width: min(100%, 620px);
+            max-height: 360px;
+            margin: 0 auto 24px;
+            object-fit: contain;
+        }
+        .unit-detail-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+        .unit-detail-title {
+            margin: 0;
+            color: #525b5e;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.12;
+        }
+        .unit-detail-price {
+            color: #5e6669;
+            font-size: 17px;
+            font-weight: 650;
+            white-space: nowrap;
+        }
+        .unit-detail-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: #777f82;
+            font-size: 14px;
+            font-weight: 650;
+        }
+        .unit-detail-features-title {
+            margin: 0 0 10px;
+            color: #525b5e;
+            font-size: 17px;
+            font-weight: 750;
+        }
+        .unit-detail-features {
+            columns: 2;
+            column-gap: 34px;
+            margin: 0 0 24px;
+            padding-left: 19px;
+            color: #626b6e;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .unit-detail-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .apply-now-button {
+            min-height: 42px;
+            border: 0;
+            border-radius: 4px;
+            padding: 0 24px;
+            cursor: pointer;
+            color: #fff;
+            background: #2878b9;
+            font: 800 14px/42px "Helvetica Neue", Arial, sans-serif;
+            text-transform: uppercase;
+        }
+        .unit-detail-disclaimer {
+            margin: 0;
+            color: #6b7376;
+            font-size: 13px;
+            line-height: 1.35;
+        }
+        @media (max-width: 720px) {
+            .renter-floorplan-panel {
+                width: calc(100vw - 24px);
+                max-height: 42vh;
+            }
+            .floorplan-card {
+                grid-template-columns: 82px minmax(0, 1fr);
+            }
+            .floorplan-thumb {
+                width: 82px;
+            }
+            .unit-detail-content {
+                padding: 22px;
+            }
+            .unit-detail-header {
+                flex-direction: column;
+            }
+            .unit-detail-price {
+                white-space: normal;
+            }
+            .unit-detail-features {
+                columns: 1;
+            }
+        }
         .floor-plan-panel {
             width: 320px;
             max-width: min(320px, calc(100vw - 24px));
@@ -1724,6 +2097,25 @@
             <button id="stackUnitSearchClear" class="room-lookup-clear" type="button" aria-label="Clear 3D unit search" title="Clear 3D unit search">x</button>
         </div>
         <div id="stackUnitDropdown" class="stack-unit-dropdown" role="listbox" aria-label="3D unit results"></div>
+    </div>
+
+    <section id="renterFloorplanPanel" class="renter-floorplan-panel" aria-live="polite">
+        <div class="renter-floorplan-title">
+            <h1>Find your floorplan</h1>
+            <div id="renterFloorplanCount" class="renter-floorplan-count">Loading</div>
+        </div>
+        <div id="bedFilterTabs" class="bed-filter-tabs" role="group" aria-label="Bedroom count"></div>
+        <div id="floorplanResults" class="floorplan-results"></div>
+        <button id="changeFloorplanButton" class="change-floorplan-button" type="button">Select a Different Floorplan</button>
+        <div id="availableUnitList" class="available-unit-list"></div>
+        <div id="renterFloorplanStatus" class="renter-floorplan-status">Choose a bedroom count.</div>
+    </section>
+
+    <div id="unitDetailBackdrop" class="unit-detail-backdrop" role="dialog" aria-modal="true" aria-labelledby="unitDetailTitle">
+        <div class="unit-detail-modal">
+            <button id="unitDetailClose" class="unit-detail-close" type="button" aria-label="Close unit details">x</button>
+            <div id="unitDetailContent" class="unit-detail-content"></div>
+        </div>
     </div>
 
     <div class="editor-toggles-wrap" id="editorTogglesWrap">
@@ -2078,6 +2470,363 @@
 
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { LumaSplatsThree } from '@lumaai/luma-web';
+    import * as ApartmentUnitsData from '../shared/apartment-units-supabase.mjs';
+
+    window.__apartmentUnits = ApartmentUnitsData;
+
+    const renterFloorplanState = {
+        floorplans: [],
+        selectedPlan: null,
+        selectedBeds: null,
+        selectedFloorplanName: null,
+        selectedUnits: [],
+        selectedUnitNumber: null,
+    };
+
+    function bedroomLabel(beds) {
+        const value = Number(beds);
+        if (value === 0) return 'Studio';
+        if (value === 1) return '1 Bed';
+        return `${value} Bed`;
+    }
+
+    function bathLabel(baths) {
+        const value = Number(baths);
+        if (!Number.isFinite(value)) return '';
+        return `${value % 1 === 0 ? String(value) : String(value)} Bath`;
+    }
+
+    function formatCurrency(value) {
+        const number = Number(value);
+        if (!Number.isFinite(number)) return '';
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(number);
+    }
+
+    function formatSqft(min, max) {
+        const minValue = Number(min);
+        const maxValue = Number(max);
+        if (!Number.isFinite(minValue)) return '';
+        if (Number.isFinite(maxValue) && maxValue !== minValue) return `${minValue}-${maxValue} sq ft`;
+        return `${minValue} sq ft`;
+    }
+
+    function setRenterStatus(text) {
+        const status = document.getElementById('renterFloorplanStatus');
+        if (status) status.textContent = text || '';
+    }
+
+    function selectedPlan() {
+        return renterFloorplanState.selectedPlan || renterFloorplanState.floorplans.find((plan) => plan.floorplan_name === renterFloorplanState.selectedFloorplanName) || null;
+    }
+
+    function stopPanelPropagation(panel) {
+        if (!panel) return;
+        ['pointerdown', 'click', 'touchstart'].forEach((eventName) => {
+            panel.addEventListener(eventName, (event) => event.stopPropagation(), { passive: true });
+        });
+    }
+
+    function makeThumbnail(plan) {
+        const imageUrl = ApartmentUnitsData.getFloorplanImageUrl(plan.floorplan_image_path);
+        if (!imageUrl) {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'floorplan-thumb floorplan-thumb-placeholder';
+            placeholder.textContent = 'No image';
+            return placeholder;
+        }
+        const img = document.createElement('img');
+        img.className = 'floorplan-thumb';
+        img.src = imageUrl;
+        img.alt = `${plan.floorplan_name} floorplan`;
+        img.loading = 'lazy';
+        img.addEventListener('error', () => {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'floorplan-thumb floorplan-thumb-placeholder';
+            placeholder.textContent = 'Image unavailable';
+            img.replaceWith(placeholder);
+        }, { once: true });
+        return img;
+    }
+
+    function renderBedFilters() {
+        const tabs = document.getElementById('bedFilterTabs');
+        if (!tabs) return;
+        tabs.innerHTML = '';
+        const bedCounts = Array.from(new Set(
+            renterFloorplanState.floorplans
+                .map((plan) => Number(plan.beds))
+                .filter(Number.isFinite)
+        )).sort((a, b) => a - b);
+
+        bedCounts.forEach((beds) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'bed-filter-tab';
+            button.textContent = bedroomLabel(beds);
+            button.classList.toggle('active', renterFloorplanState.selectedBeds === beds);
+            button.addEventListener('click', () => {
+                renterFloorplanState.selectedBeds = beds;
+                renterFloorplanState.selectedPlan = null;
+                renterFloorplanState.selectedFloorplanName = null;
+                renterFloorplanState.selectedUnits = [];
+                renterFloorplanState.selectedUnitNumber = null;
+                window.__roomKmlOverlay?.clearStackSelection?.({ statusText: 'Choose a floorplan to highlight available units' });
+                renderBedFilters();
+                renderFloorplanCards();
+                renderAvailableUnitList();
+                setRenterStatus('Select a floorplan to highlight available units.');
+            });
+            tabs.appendChild(button);
+        });
+    }
+
+    async function waitForRoomOverlay() {
+        for (let attempt = 0; attempt < 100; attempt += 1) {
+            if (window.__roomKmlOverlay) {
+                await window.__roomKmlOverlay.ready;
+                return window.__roomKmlOverlay;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 80));
+        }
+        return null;
+    }
+
+    async function highlightAvailableUnitsForFloorplan(plan) {
+        const panel = document.getElementById('renterFloorplanPanel');
+        if (panel) panel.classList.add('collapsed');
+        renterFloorplanState.selectedPlan = plan;
+        renterFloorplanState.selectedFloorplanName = plan.floorplan_name;
+        renterFloorplanState.selectedUnits = [];
+        renterFloorplanState.selectedUnitNumber = null;
+        renderFloorplanCards();
+        renderAvailableUnitList();
+        setRenterStatus(`Loading available ${plan.floorplan_name} units...`);
+
+        try {
+            const [overlay, units] = await Promise.all([
+                waitForRoomOverlay(),
+                ApartmentUnitsData.fetchAvailableUnitsForFloorplan(plan.floorplan_name),
+            ]);
+            const unitNumbers = units.map((unit) => unit.unit_number).filter(Boolean);
+            renterFloorplanState.selectedUnits = units;
+            if (!overlay) {
+                setRenterStatus('3D floorplan overlay is still loading.');
+                return;
+            }
+            overlay.selectStackUnits(unitNumbers, {
+                statusText: `Highlighted ${unitNumbers.length} available ${plan.floorplan_name} unit${unitNumbers.length === 1 ? '' : 's'}`,
+            });
+            renderFloorplanCards();
+            renderAvailableUnitList();
+            setRenterStatus(`${unitNumbers.length} available ${plan.floorplan_name} unit${unitNumbers.length === 1 ? '' : 's'} highlighted.`);
+        } catch (error) {
+            console.warn('Failed to highlight available units', error);
+            setRenterStatus('Could not load available units for that floorplan.');
+        }
+    }
+
+    function renderFloorplanCards() {
+        const results = document.getElementById('floorplanResults');
+        const count = document.getElementById('renterFloorplanCount');
+        const changeButton = document.getElementById('changeFloorplanButton');
+        const panel = document.getElementById('renterFloorplanPanel');
+        if (!results) return;
+        results.innerHTML = '';
+        const activePlan = selectedPlan();
+        const collapsed = !!activePlan;
+        if (panel) panel.classList.toggle('collapsed', collapsed);
+        if (changeButton) changeButton.style.display = collapsed ? '' : 'none';
+        const plans = collapsed
+            ? [activePlan]
+            : renterFloorplanState.floorplans.filter((plan) => Number(plan.beds) === renterFloorplanState.selectedBeds);
+        if (count) count.textContent = `${plans.length} option${plans.length === 1 ? '' : 's'}`;
+
+        plans.forEach((plan) => {
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'floorplan-card';
+            card.classList.toggle('active', renterFloorplanState.selectedFloorplanName === plan.floorplan_name);
+            card.appendChild(makeThumbnail(plan));
+
+            const body = document.createElement('div');
+            body.className = 'floorplan-card-body';
+
+            const name = document.createElement('div');
+            name.className = 'floorplan-name';
+            name.textContent = plan.floorplan_name;
+            body.appendChild(name);
+
+            const meta = document.createElement('div');
+            meta.className = 'floorplan-meta';
+            [bedroomLabel(plan.beds), bathLabel(plan.baths), formatSqft(plan.sqft_min, plan.sqft_max), formatCurrency(plan.starting_price)].filter(Boolean).forEach((text) => {
+                const item = document.createElement('span');
+                item.textContent = text;
+                meta.appendChild(item);
+            });
+            body.appendChild(meta);
+
+            const availability = document.createElement('div');
+            availability.className = 'floorplan-availability';
+            const availableCount = Number(plan.available_count || 0);
+            availability.textContent = `${availableCount} available`;
+            body.appendChild(availability);
+
+            card.appendChild(body);
+            if (!collapsed) card.addEventListener('click', () => highlightAvailableUnitsForFloorplan(plan));
+            results.appendChild(card);
+        });
+
+        if (!plans.length) setRenterStatus('No floorplans found for that bedroom count.');
+    }
+
+    function renderAvailableUnitList() {
+        const list = document.getElementById('availableUnitList');
+        if (!list) return;
+        list.innerHTML = '';
+        const activePlan = selectedPlan();
+        if (!activePlan) return;
+
+        renterFloorplanState.selectedUnits.forEach((unit) => {
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'available-unit-card';
+            card.classList.toggle('active', String(unit.unit_number) === String(renterFloorplanState.selectedUnitNumber));
+
+            const number = document.createElement('span');
+            number.className = 'available-unit-number';
+            number.textContent = String(unit.unit_number);
+            card.appendChild(number);
+
+            const price = document.createElement('span');
+            price.className = 'available-unit-price';
+            price.textContent = unit.rent ? formatCurrency(unit.rent) : 'Price pending';
+            card.appendChild(price);
+
+            card.addEventListener('click', () => openUnitDetail(unit.unit_number));
+            list.appendChild(card);
+        });
+    }
+
+    function resetFloorplanSelection() {
+        renterFloorplanState.selectedPlan = null;
+        renterFloorplanState.selectedFloorplanName = null;
+        renterFloorplanState.selectedUnits = [];
+        renterFloorplanState.selectedUnitNumber = null;
+        window.__roomKmlOverlay?.clearStackSelection?.({ statusText: 'Choose a floorplan to highlight available units' });
+        renderBedFilters();
+        renderFloorplanCards();
+        renderAvailableUnitList();
+        setRenterStatus('Select a floorplan to highlight available units.');
+    }
+
+    function featureList(plan) {
+        return Array.isArray(plan?.features) ? plan.features.filter(Boolean) : [];
+    }
+
+    function openUnitDetail(unitNumber) {
+        const plan = selectedPlan();
+        if (!plan) return;
+        const unit = renterFloorplanState.selectedUnits.find((entry) => String(entry.unit_number) === String(unitNumber)) || null;
+        if (!unit) return;
+
+        renterFloorplanState.selectedUnitNumber = String(unit.unit_number);
+        renderAvailableUnitList();
+
+        const backdrop = document.getElementById('unitDetailBackdrop');
+        const content = document.getElementById('unitDetailContent');
+        if (!backdrop || !content) return;
+
+        content.innerHTML = '';
+        const imageUrl = ApartmentUnitsData.getFloorplanImageUrl(plan.floorplan_image_path);
+        if (imageUrl) {
+            const image = document.createElement('img');
+            image.className = 'unit-detail-image';
+            image.src = imageUrl;
+            image.alt = `${plan.floorplan_name} floorplan`;
+            content.appendChild(image);
+        }
+
+        const header = document.createElement('div');
+        header.className = 'unit-detail-header';
+        const title = document.createElement('h2');
+        title.id = 'unitDetailTitle';
+        title.className = 'unit-detail-title';
+        title.textContent = `${plan.floorplan_name} #${unit.unit_number}`;
+        header.appendChild(title);
+        const price = document.createElement('div');
+        price.className = 'unit-detail-price';
+        price.textContent = `Starting from: ${formatCurrency(unit.rent || plan.starting_price) || 'Contact us'}`;
+        header.appendChild(price);
+        content.appendChild(header);
+
+        const stats = document.createElement('div');
+        stats.className = 'unit-detail-stats';
+        [bedroomLabel(plan.beds), bathLabel(plan.baths), formatSqft(plan.sqft_min, plan.sqft_max)].filter(Boolean).forEach((text) => {
+            const item = document.createElement('span');
+            item.textContent = text;
+            stats.appendChild(item);
+        });
+        content.appendChild(stats);
+
+        const featuresTitle = document.createElement('h3');
+        featuresTitle.className = 'unit-detail-features-title';
+        featuresTitle.textContent = 'Features & Amenities';
+        content.appendChild(featuresTitle);
+
+        const features = document.createElement('ul');
+        features.className = 'unit-detail-features';
+        featureList(plan).forEach((feature) => {
+            const item = document.createElement('li');
+            item.textContent = feature;
+            features.appendChild(item);
+        });
+        content.appendChild(features);
+
+        const actions = document.createElement('div');
+        actions.className = 'unit-detail-actions';
+        const apply = document.createElement('button');
+        apply.type = 'button';
+        apply.className = 'apply-now-button';
+        apply.textContent = 'Apply Now';
+        apply.addEventListener('click', () => setRenterStatus('Application link coming soon.'));
+        actions.appendChild(apply);
+        content.appendChild(actions);
+
+        const disclaimer = document.createElement('p');
+        disclaimer.className = 'unit-detail-disclaimer';
+        disclaimer.textContent = 'Prices and special offers valid for new residents only. Pricing and availability subject to change at any time. Floorplan images, dimensions, and finishes are representative and may vary by unit.';
+        content.appendChild(disclaimer);
+
+        backdrop.classList.add('active');
+    }
+
+    function closeUnitDetail() {
+        document.getElementById('unitDetailBackdrop')?.classList.remove('active');
+    }
+
+    async function initRenterFloorplanBrowser() {
+        const panel = document.getElementById('renterFloorplanPanel');
+        stopPanelPropagation(panel);
+        stopPanelPropagation(document.getElementById('unitDetailBackdrop'));
+        document.getElementById('changeFloorplanButton')?.addEventListener('click', resetFloorplanSelection);
+        document.getElementById('unitDetailClose')?.addEventListener('click', closeUnitDetail);
+        document.getElementById('unitDetailBackdrop')?.addEventListener('click', (event) => {
+            if (event.target === event.currentTarget) closeUnitDetail();
+        });
+        try {
+            renterFloorplanState.floorplans = await ApartmentUnitsData.fetchCanyonVistaFloorplans();
+            const availableBeds = renterFloorplanState.floorplans.map((plan) => Number(plan.beds)).filter(Number.isFinite);
+            renterFloorplanState.selectedBeds = availableBeds.includes(1) ? 1 : Math.min(...availableBeds);
+            renderBedFilters();
+            renderFloorplanCards();
+            setRenterStatus('Select a floorplan to highlight available units.');
+        } catch (error) {
+            console.warn('Failed to load Canyon Vista floorplans', error);
+            setRenterStatus('Could not load floorplans from Supabase.');
+        }
+    }
+
+    initRenterFloorplanBrowser();
 
     // Inlined from tap-focus-refinement.mjs (tap-to-focus geometry/sampling helpers)
     const HALF_FLOAT_SIGN_MASK = 0x8000;
@@ -2652,6 +3401,7 @@
             kmlUrl: 'exports/canyon-vista-units.kml',
             borderDotPositions: borderDotPositionsByHole[0],
             pauseCameraAutomation: pauseCameraAutomationFromInteraction,
+            onStackUnitClick: openUnitDetail,
             elements: {
                 panel: document.getElementById('roomLookupPanel'),
                 input: document.getElementById('roomSearchInput'),

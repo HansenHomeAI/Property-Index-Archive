@@ -427,6 +427,7 @@ export function initRoomKmlOverlay({
   borderDotPositions = [],
   sceneY = DEFAULT_SCENE_Y,
   pauseCameraAutomation = null,
+  onStackUnitClick = null,
   elements = {},
 } = {}) {
   const state = {
@@ -449,12 +450,13 @@ export function initRoomKmlOverlay({
       flipX: DEFAULT_FLOOR_FLIP_X,
     },
     group: new Group(),
-    floorPlanVisible: true,
+    floorPlanVisible: false,
     stackGroup: new Group(),
     stackGizmoGroup: new Group(),
     stackHeightHandle: null,
     stackVisible: true,
     selectedStackUnit: null,
+    selectedStackUnits: new Set(),
     stackAsset: { version: 1, property: 'canyon-vista', levels: [] },
     planGizmoGroup: new Group(),
     planGizmoHandles: [],
@@ -828,7 +830,7 @@ export function initRoomKmlOverlay({
         if (!Array.isArray(corners) || corners.length < 3) return;
         const label = String(unit.unit);
         const mesh = makeStackCubeMesh(corners, bottomY, topY, label, level.base);
-        if (state.selectedStackUnit === label) {
+        if (state.selectedStackUnits.has(label)) {
           mesh.material.color.setHex(SELECTED_STACK_CUBE_COLOR);
           mesh.material.opacity = SELECTED_STACK_CUBE_OPACITY;
           mesh.renderOrder = 1190;
@@ -837,7 +839,7 @@ export function initRoomKmlOverlay({
         const [cx, cz] = polygonAverage(corners);
         const sprite = makeUnitLabelSprite(label);
         sprite.position.set(cx, topY + 0.018, cz);
-        sprite.visible = state.selectedStackUnit === label;
+        sprite.visible = state.selectedStackUnits.has(label);
         sprite.userData.unitNumber = label;
         state.stackGroup.add(sprite);
       });
@@ -855,26 +857,56 @@ export function initRoomKmlOverlay({
     return cubes;
   }
 
+  function getStackSelectableObjects() {
+    const objects = [];
+    state.stackGroup.traverse((child) => {
+      if (
+        (child.isMesh && child.userData?.isFloorPlanCube)
+        || (child.isSprite && child.userData?.isFloorPlanCubeLabel)
+      ) {
+        objects.push(child);
+      }
+    });
+    return objects;
+  }
+
   function syncStackSelection() {
     state.stackGroup.traverse((child) => {
       if (child.isMesh && child.userData?.isFloorPlanCube) {
-        const selected = String(child.userData.unitNumber) === String(state.selectedStackUnit);
+        const selected = state.selectedStackUnits.has(String(child.userData.unitNumber));
         child.material.color.setHex(selected ? SELECTED_STACK_CUBE_COLOR : STACK_CUBE_COLOR);
         child.material.opacity = selected ? SELECTED_STACK_CUBE_OPACITY : STACK_CUBE_OPACITY;
         child.renderOrder = selected ? 1190 : 1180;
       } else if (child.isSprite && child.userData?.isFloorPlanCubeLabel) {
-        child.visible = String(child.userData.unitNumber) === String(state.selectedStackUnit);
+        child.visible = state.selectedStackUnits.has(String(child.userData.unitNumber));
       }
     });
   }
 
-  function selectStackUnit(unitNumber) {
-    state.selectedStackUnit = unitNumber == null ? null : String(unitNumber);
+  function selectStackUnits(unitNumbers = [], { statusText = null } = {}) {
+    const selected = new Set(
+      (Array.isArray(unitNumbers) ? unitNumbers : [unitNumbers])
+        .map((unitNumber) => String(unitNumber || '').trim())
+        .filter(Boolean)
+    );
+    state.selectedStackUnits = selected;
+    state.selectedStackUnit = selected.size === 1 ? Array.from(selected)[0] : null;
     syncStackSelection();
-    if (stackSearchInput && state.selectedStackUnit) stackSearchInput.value = state.selectedStackUnit;
+    if (stackSearchInput) stackSearchInput.value = state.selectedStackUnit || '';
     renderStackSearchDropdown(false);
-    if (state.selectedStackUnit) setStatus(`Selected 3D unit ${state.selectedStackUnit}`);
-    return !!state.selectedStackUnit;
+    if (statusText) setStatus(statusText);
+    else if (selected.size) setStatus(`Highlighted ${selected.size} 3D unit${selected.size === 1 ? '' : 's'}`);
+    return selected.size;
+  }
+
+  function clearStackSelection({ statusText = 'Cleared 3D unit highlights' } = {}) {
+    return selectStackUnits([], { statusText });
+  }
+
+  function selectStackUnit(unitNumber) {
+    return selectStackUnits(unitNumber == null ? [] : [unitNumber], {
+      statusText: unitNumber == null ? 'Cleared 3D unit highlights' : `Selected 3D unit ${unitNumber}`,
+    }) > 0;
   }
 
   function getStackUnitNumbers() {
@@ -897,7 +929,7 @@ export function initRoomKmlOverlay({
       button.className = 'stack-unit-option';
       button.textContent = unit;
       button.setAttribute('role', 'option');
-      button.classList.toggle('active', unit === state.selectedStackUnit);
+      button.classList.toggle('active', state.selectedStackUnits.has(unit));
       button.addEventListener('pointerdown', (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -1165,6 +1197,7 @@ export function initRoomKmlOverlay({
   function clearStackAsset() {
     state.stackAsset = { version: 1, property: 'canyon-vista', levels: [] };
     state.selectedStackUnit = null;
+    state.selectedStackUnits = new Set();
     if (stackSearchInput) stackSearchInput.value = '';
     disposeStackGroup();
     clearStackGizmo();
@@ -1759,14 +1792,16 @@ export function initRoomKmlOverlay({
 
   function selectStackCubeFromPointer(event) {
     if (!state.stackVisible || !state.stackAsset.levels.length) return false;
-    const cubes = getStackCubeObjects();
-    if (!cubes.length) return false;
+    const objects = getStackSelectableObjects();
+    if (!objects.length) return false;
     setPointerNdc(event);
     state.raycaster.setFromCamera(state.ndc, camera);
-    const hits = state.raycaster.intersectObjects(cubes, false);
+    const hits = state.raycaster.intersectObjects(objects, false);
     if (!hits.length) return false;
     const unit = hits[0].object.userData.unitNumber;
-    return selectStackUnit(unit);
+    if (!state.selectedStackUnits.has(String(unit))) return false;
+    if (typeof onStackUnitClick === 'function') onStackUnitClick(String(unit));
+    return true;
   }
 
   function getVertexHandleScreenState(unit, vertexIndex = 0) {
@@ -1887,7 +1922,7 @@ export function initRoomKmlOverlay({
       || beginPlanGizmoDrag(event)
       || beginVertexDrag(event)
       || selectStackCubeFromPointer(event)
-      || selectFromPointer(event)
+      || (state.editorOpen && selectFromPointer(event))
     ) {
       event.preventDefault();
       event.stopPropagation();
@@ -2032,10 +2067,7 @@ export function initRoomKmlOverlay({
   if (stackSearchClearButton) {
     stackSearchClearButton.addEventListener('click', () => {
       if (stackSearchInput) stackSearchInput.value = '';
-      state.selectedStackUnit = null;
-      syncStackSelection();
-      renderStackSearchDropdown(false);
-      setStatus('Cleared 3D unit search');
+      clearStackSelection();
     });
   }
   document.addEventListener('pointerdown', (event) => {
@@ -2144,6 +2176,8 @@ export function initRoomKmlOverlay({
     saveStackAsset,
     clearStackAsset,
     selectStackUnit,
+    selectStackUnits,
+    clearStackSelection,
     toggleStackVisibility,
     setStackVisible(visible) {
       state.stackVisible = !!visible;
@@ -2155,6 +2189,9 @@ export function initRoomKmlOverlay({
     },
     getSelectedStackUnit() {
       return state.selectedStackUnit;
+    },
+    getSelectedStackUnits() {
+      return Array.from(state.selectedStackUnits).sort((a, b) => Number(a) - Number(b));
     },
     getStackAsset() {
       return JSON.parse(JSON.stringify(state.stackAsset));
