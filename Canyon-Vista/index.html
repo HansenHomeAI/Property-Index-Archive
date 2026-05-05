@@ -1440,6 +1440,73 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        .stack-unit-search-panel {
+            position: fixed;
+            top: 68px;
+            left: 12px;
+            z-index: 12;
+            width: 235px;
+            padding: 8px;
+            box-sizing: border-box;
+            border-radius: 18px;
+            color: rgba(255, 255, 255, 0.92);
+            background: rgba(72, 90, 100, 0.34);
+            -webkit-backdrop-filter: blur(50px);
+            backdrop-filter: blur(50px);
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            pointer-events: auto;
+        }
+        .stack-unit-search-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stack-unit-search-input {
+            flex: 1;
+            min-width: 0;
+            height: 32px;
+            box-sizing: border-box;
+            border: 0;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font: 650 14px/32px "Helvetica Neue", Arial, sans-serif;
+            padding: 0 12px;
+            outline: none;
+        }
+        .stack-unit-search-input:focus {
+            background: rgba(255, 255, 255, 0.26);
+            box-shadow: 0 0 0 2px rgba(56, 240, 122, 0.46);
+        }
+        .stack-unit-dropdown {
+            display: none;
+            max-height: 190px;
+            margin-top: 8px;
+            overflow-y: auto;
+            border-radius: 12px;
+            background: rgba(20, 20, 20, 0.68);
+            padding: 5px;
+        }
+        .stack-unit-dropdown.active {
+            display: block;
+        }
+        .stack-unit-option {
+            width: 100%;
+            height: 30px;
+            border: 0;
+            border-radius: 9px;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.92);
+            background: transparent;
+            text-align: left;
+            padding: 0 10px;
+            font: 650 13px/30px "Helvetica Neue", Arial, sans-serif;
+        }
+        .stack-unit-option:hover,
+        .stack-unit-option.active {
+            color: #10371f;
+            background: #38f07a;
+        }
         .floor-plan-panel {
             width: 320px;
             max-width: min(320px, calc(100vw - 24px));
@@ -1509,6 +1576,21 @@
         }
         .room-kml-editor-pane.active {
             display: block;
+        }
+        .room-kml-gizmo-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .room-kml-scale-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin: -2px 0 10px;
+        }
+        .room-kml-scale-tabs .room-kml-tab {
+            font-size: 11px;
         }
         .room-kml-editor-grid {
             display: grid;
@@ -1633,6 +1715,15 @@
         <label class="room-lookup-label" for="roomSearchInput">Room</label>
         <input id="roomSearchInput" class="room-lookup-input" type="number" inputmode="numeric" min="1" max="87" placeholder="#" autocomplete="off">
         <button id="roomClearButton" class="room-lookup-clear" type="button" aria-label="Clear room selection" title="Clear room selection">×</button>
+    </div>
+
+    <div id="stackUnitSearchPanel" class="stack-unit-search-panel" aria-live="polite">
+        <div class="stack-unit-search-row">
+            <label class="room-lookup-label" for="stackUnitSearchInput">3D Unit</label>
+            <input id="stackUnitSearchInput" class="stack-unit-search-input" type="text" inputmode="numeric" placeholder="Search" autocomplete="off">
+            <button id="stackUnitSearchClear" class="room-lookup-clear" type="button" aria-label="Clear 3D unit search" title="Clear 3D unit search">x</button>
+        </div>
+        <div id="stackUnitDropdown" class="stack-unit-dropdown" role="listbox" aria-label="3D unit results"></div>
     </div>
 
     <div class="editor-toggles-wrap" id="editorTogglesWrap">
@@ -1769,6 +1860,16 @@
                 <button id="roomKmlVertexTab" class="room-kml-tab" type="button">Vertex</button>
             </div>
             <div id="roomKmlPlanPane" class="room-kml-editor-pane active">
+                <div class="room-kml-gizmo-tabs" role="group" aria-label="Floor plan gizmo mode">
+                    <button id="roomKmlGizmoMove" class="room-kml-tab active" type="button">Move</button>
+                    <button id="roomKmlGizmoScale" class="room-kml-tab" type="button">Scale</button>
+                    <button id="roomKmlGizmoRotate" class="room-kml-tab" type="button">Rotate</button>
+                </div>
+                <div class="room-kml-scale-tabs" role="group" aria-label="Floor plan scale mode">
+                    <button id="roomKmlScaleAll" class="room-kml-tab active" type="button">All</button>
+                    <button id="roomKmlStretchX" class="room-kml-tab" type="button">Wide</button>
+                    <button id="roomKmlStretchZ" class="room-kml-tab" type="button">Deep</button>
+                </div>
                 <div class="room-kml-editor-grid">
                     <div class="room-kml-editor-field">
                         <label for="roomKmlCenterX">Center X</label>
@@ -1779,6 +1880,10 @@
                         <input id="roomKmlCenterZ" type="number" step="0.001">
                     </div>
                     <div class="room-kml-editor-field">
+                        <label for="roomKmlCenterY">Center Y</label>
+                        <input id="roomKmlCenterY" type="number" step="0.001">
+                    </div>
+                    <div class="room-kml-editor-field">
                         <label for="roomKmlRotation">Rotation</label>
                         <input id="roomKmlRotation" type="number" step="0.1">
                     </div>
@@ -1786,12 +1891,48 @@
                         <label for="roomKmlScale">Scale</label>
                         <input id="roomKmlScale" type="number" step="0.01" min="0.05">
                     </div>
+                    <div class="room-kml-editor-field">
+                        <label for="roomKmlScaleX">Width</label>
+                        <input id="roomKmlScaleX" type="number" step="0.01" min="0.05">
+                    </div>
+                    <div class="room-kml-editor-field">
+                        <label for="roomKmlScaleZ">Depth</label>
+                        <input id="roomKmlScaleZ" type="number" step="0.01" min="0.05">
+                    </div>
                 </div>
                 <label class="room-kml-editor-check" for="roomKmlFlipX">
                     <input id="roomKmlFlipX" type="checkbox">
                     <span>Pancake flip</span>
                 </label>
+                <button id="roomKmlSaveTransform" class="room-kml-editor-action" type="button">Save plan position</button>
                 <button id="roomKmlResetTransform" class="room-kml-editor-action" type="button">Reset plan</button>
+                <button id="roomKmlToggleFloorPlanVisible" class="room-kml-editor-action" type="button">Hide 2D floorplan</button>
+                <div class="floor-plan-divider"></div>
+                <div class="room-kml-editor-title">3D Stack</div>
+                <div class="room-kml-editor-grid">
+                    <div class="room-kml-editor-field">
+                        <label for="roomKmlStackBase">Level base</label>
+                        <input id="roomKmlStackBase" type="number" step="100" min="100" max="500" value="100">
+                    </div>
+                    <div class="room-kml-editor-field">
+                        <label for="roomKmlStackHeight">Height</label>
+                        <input id="roomKmlStackHeight" type="number" step="0.01" min="0.01" value="0.22">
+                    </div>
+                    <div class="room-kml-editor-field">
+                        <label for="roomKmlStackBottom">Bottom Y</label>
+                        <input id="roomKmlStackBottom" type="number" step="0.001">
+                    </div>
+                    <div class="room-kml-editor-field">
+                        <label for="roomKmlStackTop">Top Y</label>
+                        <input id="roomKmlStackTop" type="number" step="0.001">
+                    </div>
+                </div>
+                <button id="roomKmlAddStackLevel" class="room-kml-editor-action" type="button">Extrude level</button>
+                <button id="roomKmlUpdateStackLevel" class="room-kml-editor-action" type="button">Update level height</button>
+                <button id="roomKmlUsePlanYForStack" class="room-kml-editor-action" type="button">Set bottom to plan</button>
+                <button id="roomKmlToggleStackVisible" class="room-kml-editor-action" type="button">Hide 3D asset</button>
+                <button id="roomKmlSaveStackAsset" class="room-kml-editor-action" type="button">Save 3D asset</button>
+                <button id="roomKmlClearStackAsset" class="room-kml-editor-action" type="button">Clear 3D stack</button>
             </div>
             <div id="roomKmlVertexPane" class="room-kml-editor-pane">
                 <div id="roomKmlSelectedRoom" class="room-kml-editor-selected">Select a room</div>
@@ -2516,6 +2657,10 @@
                 input: document.getElementById('roomSearchInput'),
                 statusEl: document.getElementById('roomLookupStatus'),
                 clearButton: document.getElementById('roomClearButton'),
+                stackSearchPanel: document.getElementById('stackUnitSearchPanel'),
+                stackSearchInput: document.getElementById('stackUnitSearchInput'),
+                stackSearchClearButton: document.getElementById('stackUnitSearchClear'),
+                stackSearchDropdown: document.getElementById('stackUnitDropdown'),
                 editorToggle: null,
                 editorPanel: document.getElementById('roomKmlEditorPanel'),
                 planTab: document.getElementById('roomKmlPlanTab'),
@@ -2524,10 +2669,31 @@
                 vertexPane: document.getElementById('roomKmlVertexPane'),
                 centerX: document.getElementById('roomKmlCenterX'),
                 centerZ: document.getElementById('roomKmlCenterZ'),
+                centerY: document.getElementById('roomKmlCenterY'),
                 rotation: document.getElementById('roomKmlRotation'),
                 scale: document.getElementById('roomKmlScale'),
+                scaleX: document.getElementById('roomKmlScaleX'),
+                scaleZ: document.getElementById('roomKmlScaleZ'),
                 flipX: document.getElementById('roomKmlFlipX'),
+                saveTransformButton: document.getElementById('roomKmlSaveTransform'),
                 resetTransformButton: document.getElementById('roomKmlResetTransform'),
+                toggleFloorPlanVisibleButton: document.getElementById('roomKmlToggleFloorPlanVisible'),
+                stackBaseInput: document.getElementById('roomKmlStackBase'),
+                stackHeightInput: document.getElementById('roomKmlStackHeight'),
+                stackBottomInput: document.getElementById('roomKmlStackBottom'),
+                stackTopInput: document.getElementById('roomKmlStackTop'),
+                addStackLevelButton: document.getElementById('roomKmlAddStackLevel'),
+                updateStackLevelButton: document.getElementById('roomKmlUpdateStackLevel'),
+                usePlanYForStackButton: document.getElementById('roomKmlUsePlanYForStack'),
+                toggleStackVisibleButton: document.getElementById('roomKmlToggleStackVisible'),
+                saveStackAssetButton: document.getElementById('roomKmlSaveStackAsset'),
+                clearStackAssetButton: document.getElementById('roomKmlClearStackAsset'),
+                gizmoMoveButton: document.getElementById('roomKmlGizmoMove'),
+                gizmoScaleButton: document.getElementById('roomKmlGizmoScale'),
+                gizmoRotateButton: document.getElementById('roomKmlGizmoRotate'),
+                scaleAllButton: document.getElementById('roomKmlScaleAll'),
+                scaleXButton: document.getElementById('roomKmlStretchX'),
+                scaleZButton: document.getElementById('roomKmlStretchZ'),
                 editorSelectedEl: document.getElementById('roomKmlSelectedRoom'),
                 vertexSelect: document.getElementById('roomKmlVertexSelect'),
                 vertexX: document.getElementById('roomKmlVertexX'),
