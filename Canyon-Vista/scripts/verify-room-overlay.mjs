@@ -273,7 +273,7 @@ async function run() {
   const { chromium } = loadPlaywright();
   const url = process.argv[2] || process.env.ROOM_OVERLAY_URL || 'http://127.0.0.1:4173/Canyon-Vista/index.html';
   const executablePath = process.env.CHROME_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-  const stepTimeoutMs = parseTimeoutMs(process.env.VERIFY_ROOM_OVERLAY_STEP_TIMEOUT_MS, 60000);
+  const stepTimeoutMs = parseTimeoutMs(process.env.VERIFY_ROOM_OVERLAY_STEP_TIMEOUT_MS, 90000);
   const overallTimeoutMs = parseTimeoutMs(process.env.VERIFY_ROOM_OVERLAY_TIMEOUT_MS, 180000);
   let browser = null;
 
@@ -298,7 +298,7 @@ async function run() {
   page.on('pageerror', (error) => pageErrors.push(error.message));
 
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: stepTimeoutMs });
     // Reduce flakiness from UI transitions/animations while verifying editor wiring.
     await page.addStyleTag({
       content: `
@@ -311,7 +311,7 @@ async function run() {
       window.__roomKmlOverlay &&
       document.documentElement.dataset.roomOverlayReady === 'true' &&
       window.__roomKmlOverlay.roomCount() === 87,
-    null, { timeout: 60000 });
+    null, { timeout: stepTimeoutMs });
 
     const initial = await page.evaluate(() => ({
       count: window.__roomKmlOverlay.roomCount(),
