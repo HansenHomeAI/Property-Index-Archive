@@ -42,7 +42,7 @@ const SELECTED_FILL_COLOR = 0xffd047;
 const STACK_CUBE_COLOR = 0x8fe8ff;
 const STACK_CUBE_OPACITY = 0;
 const SELECTED_STACK_CUBE_COLOR = 0x38f07a;
-const SELECTED_STACK_CUBE_OPACITY = 0.64;
+const DEFAULT_SELECTED_STACK_CUBE_OPACITY = 0.42;
 const DEFAULT_FLOOR_ROTATION_DEG = 0;
 const DEFAULT_FLOOR_FLIP_X = true;
 const PLAN_GIZMO_MOVE_COLOR = 0xffd047;
@@ -457,6 +457,7 @@ export function initRoomKmlOverlay({
     stackVisible: true,
     selectedStackUnit: null,
     selectedStackUnits: new Set(),
+    selectedStackCubeOpacity: DEFAULT_SELECTED_STACK_CUBE_OPACITY,
     stackAsset: { version: 1, property: 'canyon-vista', levels: [] },
     planGizmoGroup: new Group(),
     planGizmoHandles: [],
@@ -832,7 +833,7 @@ export function initRoomKmlOverlay({
         const mesh = makeStackCubeMesh(corners, bottomY, topY, label, level.base);
         if (state.selectedStackUnits.has(label)) {
           mesh.material.color.setHex(SELECTED_STACK_CUBE_COLOR);
-          mesh.material.opacity = SELECTED_STACK_CUBE_OPACITY;
+          mesh.material.opacity = state.selectedStackCubeOpacity;
           mesh.renderOrder = 1190;
         }
         state.stackGroup.add(mesh);
@@ -875,12 +876,220 @@ export function initRoomKmlOverlay({
       if (child.isMesh && child.userData?.isFloorPlanCube) {
         const selected = state.selectedStackUnits.has(String(child.userData.unitNumber));
         child.material.color.setHex(selected ? SELECTED_STACK_CUBE_COLOR : STACK_CUBE_COLOR);
-        child.material.opacity = selected ? SELECTED_STACK_CUBE_OPACITY : STACK_CUBE_OPACITY;
+        child.material.opacity = selected ? state.selectedStackCubeOpacity : STACK_CUBE_OPACITY;
         child.renderOrder = selected ? 1190 : 1180;
       } else if (child.isSprite && child.userData?.isFloorPlanCubeLabel) {
         child.visible = state.selectedStackUnits.has(String(child.userData.unitNumber));
       }
     });
+  }
+
+  function setSelectedStackCubeOpacity(opacity) {
+    const next = Number(opacity);
+    if (!Number.isFinite(next)) return state.selectedStackCubeOpacity;
+    state.selectedStackCubeOpacity = Math.min(0.95, Math.max(0.05, next));
+    syncStackSelection();
+    return state.selectedStackCubeOpacity;
+  }
+
+  function getStackVolumeForUnit(unitNumber) {
+    const target = String(unitNumber);
+    for (const level of state.stackAsset.levels || []) {
+      const bottomY = Number(level.bottomY);
+      const topY = Number(level.topY);
+      if (!Number.isFinite(bottomY) || !Number.isFinite(topY)) continue;
+      for (const unit of level.units || []) {
+        const label = String(unit.unit);
+        const corners = unit.cornersXz || unit.corners_xz;
+        if (label === target && Array.isArray(corners) && corners.length >= 3) {
+          return { unit: label, cornersXz: corners, bottomY, topY };
+        }
+      }
+    }
+    return null;
+  }
+
+  function getStackVolumeCenter(volume) {
+    const corners = Array.isArray(volume?.cornersXz) ? volume.cornersXz : [];
+    if (!corners.length) return null;
+    const totals = corners.reduce((sum, corner) => {
+      sum.x += Number(corner[0]) || 0;
+      sum.z += Number(corner[1]) || 0;
+      return sum;
+    }, { x: 0, z: 0 });
+    const bottomY = Number(volume.bottomY);
+    const topY = Number(volume.topY);
+    if (!Number.isFinite(bottomY) || !Number.isFinite(topY)) return null;
+    return new Vector3(
+      totals.x / corners.length,
+      (bottomY + topY) / 2,
+      totals.z / corners.length
+    );
+  }
+
+  function getStackVolumePoints(volume) {
+    const corners = Array.isArray(volume?.cornersXz) ? volume.cornersXz : [];
+    const bottomY = Number(volume?.bottomY);
+    const topY = Number(volume?.topY);
+    if (!corners.length || !Number.isFinite(bottomY) || !Number.isFinite(topY)) return [];
+    return corners.flatMap((corner) => {
+      const x = Number(corner[0]);
+      const z = Number(corner[1]);
+      if (!Number.isFinite(x) || !Number.isFinite(z)) return [];
+      return [new Vector3(x, bottomY, z), new Vector3(x, topY, z)];
+    });
+  }
+
+  function getStackAssetBounds() {
+    const points = (state.stackAsset.levels || [])
+      .flatMap((level) => (level.units || []).flatMap((unit) => getStackVolumePoints({
+        cornersXz: unit.cornersXz || unit.corners_xz,
+        bottomY: level.bottomY,
+        topY: level.topY,
+      })));
+    if (!points.length) return null;
+    const xs = points.map((point) => point.x);
+    const ys = points.map((point) => point.y);
+    const zs = points.map((point) => point.z);
+    return {
+      minX: Math.min(...xs),
+      maxX: Math.max(...xs),
+      minY: Math.min(...ys),
+      maxY: Math.max(...ys),
+      minZ: Math.min(...zs),
+      maxZ: Math.max(...zs),
+    };
+  }
+
+  function getAllStackAssetPoints() {
+    return (state.stackAsset.levels || [])
+      .flatMap((level) => (level.units || []).flatMap((unit) => getStackVolumePoints({
+        cornersXz: unit.cornersXz || unit.corners_xz,
+        bottomY: level.bottomY,
+        topY: level.topY,
+      })));
+  }
+
+  function crossXz(origin, a, b) {
+    return ((a.x - origin.x) * (b.z - origin.z)) - ((a.z - origin.z) * (b.x - origin.x));
+  }
+
+  function buildConvexHullXz(points) {
+    const unique = Array.from(new Map(points
+      .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.z))
+      .map((point) => [`${round6(point.x)},${round6(point.z)}`, { x: point.x, z: point.z }])).values())
+      .sort((a, b) => (a.x === b.x ? a.z - b.z : a.x - b.x));
+    if (unique.length <= 2) return unique;
+    const lower = [];
+    unique.forEach((point) => {
+      while (lower.length >= 2 && crossXz(lower[lower.length - 2], lower[lower.length - 1], point) <= 0) lower.pop();
+      lower.push(point);
+    });
+    const upper = [];
+    for (let index = unique.length - 1; index >= 0; index -= 1) {
+      const point = unique[index];
+      while (upper.length >= 2 && crossXz(upper[upper.length - 2], upper[upper.length - 1], point) <= 0) upper.pop();
+      upper.push(point);
+    }
+    lower.pop();
+    upper.pop();
+    return lower.concat(upper);
+  }
+
+  function distanceToSegmentXz(point, a, b) {
+    const dx = b.x - a.x;
+    const dz = b.z - a.z;
+    const lengthSq = (dx * dx) + (dz * dz);
+    if (lengthSq < 0.000001) return Math.hypot(point.x - a.x, point.z - a.z);
+    const t = Math.max(0, Math.min(1, (((point.x - a.x) * dx) + ((point.z - a.z) * dz)) / lengthSq));
+    const projectedX = a.x + (t * dx);
+    const projectedZ = a.z + (t * dz);
+    return Math.hypot(point.x - projectedX, point.z - projectedZ);
+  }
+
+  function distanceToHullXz(point, hull) {
+    if (!Array.isArray(hull) || !hull.length) return 0;
+    if (hull.length === 1) return Math.hypot(point.x - hull[0].x, point.z - hull[0].z);
+    return hull.reduce((minDistance, corner, index) => {
+      const nextCorner = hull[(index + 1) % hull.length];
+      return Math.min(minDistance, distanceToSegmentXz(point, corner, nextCorner));
+    }, Infinity);
+  }
+
+  function getStackFrameForUnits(unitNumbers = []) {
+    const selectedVolumes = (Array.isArray(unitNumbers) ? unitNumbers : [unitNumbers])
+      .map((unitNumber) => String(unitNumber || '').trim())
+      .filter(Boolean)
+      .map((unitNumber) => getStackVolumeForUnit(unitNumber))
+      .filter(Boolean);
+    const centers = selectedVolumes.map(getStackVolumeCenter).filter(Boolean);
+    if (!centers.length) return null;
+    const center = centers.reduce((sum, point) => sum.add(point), new Vector3()).multiplyScalar(1 / centers.length);
+    const points = selectedVolumes.flatMap(getStackVolumePoints);
+    const radius = points.reduce((max, point) => Math.max(max, point.distanceTo(center)), 0);
+    const assetPoints = getAllStackAssetPoints();
+    const bounds = getStackAssetBounds();
+    const assetCenter = bounds
+      ? new Vector3(
+        (bounds.minX + bounds.maxX) / 2,
+        (bounds.minY + bounds.maxY) / 2,
+        (bounds.minZ + bounds.maxZ) / 2
+      )
+      : new Vector3(0, center.y, 0);
+    const radial = new Vector3(center.x - assetCenter.x, 0, center.z - assetCenter.z);
+    const assetRadius = bounds
+      ? Math.max(
+        Math.hypot(bounds.maxX - assetCenter.x, bounds.maxZ - assetCenter.z),
+        Math.hypot(bounds.minX - assetCenter.x, bounds.minZ - assetCenter.z),
+        0.001
+      )
+      : 1;
+    const normalizedRadialDistance = radial.length() / assetRadius;
+    if (radial.lengthSq() < 0.0001) radial.set(0, 0, -1);
+    radial.normalize();
+    const hull = buildConvexHullXz(assetPoints);
+    const hullDistanceNorm = distanceToHullXz({ x: center.x, z: center.z }, hull) / assetRadius;
+    const centerHullDistanceNorms = centers.map((point) => distanceToHullXz({ x: point.x, z: point.z }, hull) / assetRadius);
+    const interiorThreshold = 0.09;
+    const strongInteriorThreshold = 0.15;
+    const interiorCenterCount = centerHullDistanceNorms.filter((distance) => distance > interiorThreshold).length;
+    const interiorShare = centerHullDistanceNorms.length ? interiorCenterCount / centerHullDistanceNorms.length : 0;
+    const averageHullDistanceNorm = centerHullDistanceNorms.length
+      ? centerHullDistanceNorms.reduce((sum, distance) => sum + distance, 0) / centerHullDistanceNorms.length
+      : hullDistanceNorm;
+    const interior = centers.length <= 3
+      ? (hullDistanceNorm > interiorThreshold || averageHullDistanceNorm > interiorThreshold)
+      : (interiorShare >= 0.58 || (hullDistanceNorm > strongInteriorThreshold && averageHullDistanceNorm > interiorThreshold));
+    return {
+      x: round6(center.x),
+      y: round6(center.y),
+      z: round6(center.z),
+      count: centers.length,
+      radius: round6(radius),
+      assetCenter: {
+        x: round6(assetCenter.x),
+        y: round6(assetCenter.y),
+        z: round6(assetCenter.z),
+      },
+      assetTopY: bounds ? round6(bounds.maxY) : round6(center.y),
+      radialDirection: {
+        x: round6(radial.x),
+        z: round6(radial.z),
+      },
+      normalizedRadialDistance: round6(normalizedRadialDistance),
+      hullDistance: round6(hullDistanceNorm * assetRadius),
+      hullDistanceNorm: round6(hullDistanceNorm),
+      interiorShare: round6(interiorShare),
+      viewSide: interior ? 'interior' : 'exterior',
+    };
+  }
+
+  function getSelectedStackFrame() {
+    return getStackFrameForUnits(Array.from(state.selectedStackUnits));
+  }
+
+  function getSelectedStackCenter() {
+    return getSelectedStackFrame();
   }
 
   function selectStackUnits(unitNumbers = [], { statusText = null } = {}) {
@@ -1793,15 +2002,74 @@ export function initRoomKmlOverlay({
   function selectStackCubeFromPointer(event) {
     if (!state.stackVisible || !state.stackAsset.levels.length) return false;
     const objects = getStackSelectableObjects();
-    if (!objects.length) return false;
     setPointerNdc(event);
     state.raycaster.setFromCamera(state.ndc, camera);
-    const hits = state.raycaster.intersectObjects(objects, false);
-    if (!hits.length) return false;
-    const unit = hits[0].object.userData.unitNumber;
-    if (!state.selectedStackUnits.has(String(unit))) return false;
+    const hits = objects.length ? state.raycaster.intersectObjects(objects, false) : [];
+    const hitUnit = hits.find((hit) => state.selectedStackUnits.has(String(hit.object.userData.unitNumber)))?.object.userData.unitNumber;
+    const unit = hitUnit || pickSelectedStackUnitFromScreen(event);
+    if (!unit || !state.selectedStackUnits.has(String(unit))) return false;
     if (typeof onStackUnitClick === 'function') onStackUnitClick(String(unit));
     return true;
+  }
+
+  function projectStackPoint(point, rect) {
+    const projected = new Vector3(point.x, point.y, point.z).project(camera);
+    return {
+      x: (projected.x + 1) * 0.5 * rect.width,
+      y: (1 - projected.y) * 0.5 * rect.height,
+      z: projected.z,
+      inDepth: projected.z > -1 && projected.z < 1,
+    };
+  }
+
+  function getProjectedStackVolumeBounds(volume, rect) {
+    const points = [];
+    const corners = volume.cornersXz || [];
+    corners.forEach((corner) => {
+      const x = Number(corner[0]);
+      const z = Number(corner[1]);
+      if (!Number.isFinite(x) || !Number.isFinite(z)) return;
+      points.push(projectStackPoint({ x, y: volume.bottomY, z }, rect));
+      points.push(projectStackPoint({ x, y: volume.topY, z }, rect));
+    });
+    const visible = points.filter((point) => point.inDepth);
+    if (!visible.length) return null;
+    const xs = visible.map((point) => point.x);
+    const ys = visible.map((point) => point.y);
+    const [cx, cz] = polygonAverage(corners);
+    const label = projectStackPoint({ x: cx, y: volume.topY + 0.018, z: cz }, rect);
+    return {
+      minX: Math.min(...xs),
+      maxX: Math.max(...xs),
+      minY: Math.min(...ys),
+      maxY: Math.max(...ys),
+      label,
+    };
+  }
+
+  function pickSelectedStackUnitFromScreen(event) {
+    if (!state.selectedStackUnits.size) return null;
+    const rect = renderer.domElement.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    let best = null;
+    state.selectedStackUnits.forEach((unitNumber) => {
+      const volume = getStackVolumeForUnit(unitNumber);
+      if (!volume) return;
+      const bounds = getProjectedStackVolumeBounds(volume, rect);
+      if (!bounds) return;
+      const pad = 22;
+      const insideVolume = x >= bounds.minX - pad && x <= bounds.maxX + pad && y >= bounds.minY - pad && y <= bounds.maxY + pad;
+      const labelDx = Math.abs(x - bounds.label.x);
+      const labelDy = Math.abs(y - bounds.label.y);
+      const insideLabel = bounds.label.inDepth && labelDx <= 72 && labelDy <= 34;
+      if (!insideVolume && !insideLabel) return;
+      const centerX = Math.min(Math.max(x, bounds.minX), bounds.maxX);
+      const centerY = Math.min(Math.max(y, bounds.minY), bounds.maxY);
+      const distance = Math.hypot(x - centerX, y - centerY) + (insideLabel ? 0 : 12);
+      if (!best || distance < best.distance) best = { unit: unitNumber, distance };
+    });
+    return best?.unit || null;
   }
 
   function getVertexHandleScreenState(unit, vertexIndex = 0) {
@@ -2192,6 +2460,13 @@ export function initRoomKmlOverlay({
     },
     getSelectedStackUnits() {
       return Array.from(state.selectedStackUnits).sort((a, b) => Number(a) - Number(b));
+    },
+    getSelectedStackCenter,
+    getSelectedStackFrame,
+    getStackFrameForUnits,
+    setSelectedStackCubeOpacity,
+    getSelectedStackCubeOpacity() {
+      return state.selectedStackCubeOpacity;
     },
     getStackAsset() {
       return JSON.parse(JSON.stringify(state.stackAsset));

@@ -1,15 +1,15 @@
 {
   "version": 1,
   "property": "canyon-vista",
-  "saved_at": "2026-05-05T16:55:19.791Z",
+  "saved_at": "2026-05-06T21:08:43.534Z",
   "transform": {
-    "centerX": 0.158878,
-    "centerY": -0.213729,
-    "centerZ": -0.074555,
-    "rotationDeg": -0.926839,
-    "scale": 0.594064,
-    "scaleX": 1.063471,
-    "scaleZ": 0.926051,
+    "centerX": -0.628769,
+    "centerY": 0,
+    "centerZ": -0.302796,
+    "rotationDeg": 0,
+    "scale": 1,
+    "scaleX": 1,
+    "scaleZ": 1,
     "flipX": true
   }
 }

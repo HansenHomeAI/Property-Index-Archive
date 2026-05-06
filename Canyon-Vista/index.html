@@ -1689,6 +1689,10 @@
             background: #72f59b;
             font: 750 12px/32px "Helvetica Neue", Arial, sans-serif;
         }
+        .mobile-availability-button,
+        .mobile-unit-actions {
+            display: none;
+        }
         .available-unit-list {
             display: flex;
             flex-direction: column;
@@ -1739,30 +1743,34 @@
         }
         .unit-detail-backdrop {
             position: fixed;
-            inset: 0;
+            top: 18px;
+            right: 18px;
+            bottom: 18px;
             z-index: 40;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
+            width: min(390px, calc(100vw - 36px));
+            display: block;
             box-sizing: border-box;
-            background: rgba(0, 0, 0, 0.46);
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-            pointer-events: auto;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(calc(100% + 24px));
+            transition: opacity 180ms ease, transform 220ms ease;
         }
         .unit-detail-backdrop.active {
-            display: flex;
+            pointer-events: auto;
+            opacity: 1;
+            transform: translateX(0);
         }
         .unit-detail-modal {
-            width: min(780px, calc(100vw - 32px));
-            max-height: calc(100vh - 48px);
+            width: 100%;
+            height: 100%;
             overflow-y: auto;
             border-radius: 8px;
-            background: rgba(246, 246, 243, 0.96);
+            background: rgba(246, 246, 243, 0.94);
             color: #3f4648;
-            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+            box-shadow: 0 18px 54px rgba(0, 0, 0, 0.34);
             font-family: "Helvetica Neue", Arial, sans-serif;
+            -webkit-backdrop-filter: blur(14px);
+            backdrop-filter: blur(14px);
         }
         .unit-detail-close {
             position: sticky;
@@ -1780,34 +1788,33 @@
             z-index: 2;
         }
         .unit-detail-content {
-            padding: 30px;
+            padding: 22px;
         }
         .unit-detail-image {
             display: block;
-            width: min(100%, 620px);
-            max-height: 360px;
-            margin: 0 auto 24px;
+            width: 100%;
+            max-height: 260px;
+            margin: 0 auto 18px;
             object-fit: contain;
         }
         .unit-detail-header {
             display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 18px;
-            margin-bottom: 18px;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+            margin-bottom: 14px;
         }
         .unit-detail-title {
             margin: 0;
             color: #525b5e;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
             line-height: 1.12;
         }
         .unit-detail-price {
             color: #5e6669;
-            font-size: 17px;
+            font-size: 15px;
             font-weight: 650;
-            white-space: nowrap;
         }
         .unit-detail-stats {
             display: flex;
@@ -1825,8 +1832,7 @@
             font-weight: 750;
         }
         .unit-detail-features {
-            columns: 2;
-            column-gap: 34px;
+            columns: 1;
             margin: 0 0 24px;
             padding-left: 19px;
             color: #626b6e;
@@ -1850,34 +1856,329 @@
             font: 800 14px/42px "Helvetica Neue", Arial, sans-serif;
             text-transform: uppercase;
         }
-        .unit-detail-disclaimer {
-            margin: 0;
-            color: #6b7376;
-            font-size: 13px;
-            line-height: 1.35;
-        }
         @media (max-width: 720px) {
-            .renter-floorplan-panel {
-                width: calc(100vw - 24px);
-                max-height: 42vh;
+            .menu-container,
+            .editor-toggles-wrap,
+            #overlay,
+            #detailsBox {
+                display: none !important;
             }
-            .floorplan-card {
+            .renter-floorplan-panel {
+                top: 12px;
+                right: 12px;
+                left: 12px;
+                width: auto;
+                max-width: none;
+                max-height: calc(100dvh - 24px);
+                border-radius: 18px;
+                padding: 12px;
+            }
+            .mobile-availability-button {
+                display: block;
+                width: 100%;
+                min-height: 46px;
+                border: 0;
+                border-radius: 999px;
+                padding: 0 18px;
+                color: #10251b;
+                background: #72f59b;
+                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+                font: 800 14px/46px "Helvetica Neue", Arial, sans-serif;
+                letter-spacing: 0;
+            }
+            .renter-floorplan-panel.mobile-closed:not(.mobile-selector-open) {
+                right: 18px;
+                left: 18px;
+                width: auto;
+                max-height: none;
+                padding: 0;
+                border-radius: 999px;
+                background: transparent;
+                -webkit-backdrop-filter: none;
+                backdrop-filter: none;
+                box-shadow: none;
+            }
+            .renter-floorplan-panel.mobile-closed:not(.mobile-selector-open)::before {
+                display: none;
+            }
+            .renter-floorplan-panel.mobile-closed:not(.mobile-selector-open) > :not(.mobile-availability-button) {
+                display: none !important;
+            }
+            .renter-floorplan-panel.mobile-selector-open {
+                inset: 10px;
+                width: auto;
+                max-height: none;
+                height: calc(100dvh - 20px);
+                border-radius: 24px;
+                padding: 16px 14px;
+                border: 1px solid rgba(255, 255, 255, 0.26);
+                overflow: hidden;
+            }
+            .renter-floorplan-panel.mobile-selector-open .mobile-availability-button {
+                display: none;
+            }
+            .renter-floorplan-panel.mobile-selector-open .floorplan-results {
+                flex: 1 1 auto;
+                padding-bottom: 16px;
+            }
+            .renter-floorplan-panel.mobile-selector-open .floorplan-card {
                 grid-template-columns: 82px minmax(0, 1fr);
             }
-            .floorplan-thumb {
+            .renter-floorplan-panel.mobile-selector-open .floorplan-thumb {
                 width: 82px;
             }
+            .renter-floorplan-panel.collapsed {
+                width: auto;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) {
+                right: 14px;
+                left: 14px;
+                width: auto;
+                max-height: none;
+                padding: 10px 12px;
+                gap: 7px;
+                border-radius: 16px;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .mobile-availability-button,
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .bed-filter-tabs,
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .renter-floorplan-count,
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .floorplan-results,
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .floorplan-card > :not(.floorplan-card-body),
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .floorplan-meta,
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .floorplan-availability {
+                display: none !important;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .renter-floorplan-status {
+                position: fixed;
+                left: 12px;
+                right: 12px;
+                top: calc(100dvh - 194px - env(safe-area-inset-bottom, 0px));
+                min-height: 0;
+                border-radius: 999px;
+                padding: 9px 12px;
+                color: #10251b;
+                background: rgba(114, 245, 155, 0.94);
+                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
+                font-size: 12px;
+                font-weight: 800;
+                text-align: center;
+                opacity: 0;
+                pointer-events: none;
+                transform: translateY(8px);
+                transition: opacity 160ms ease, transform 160ms ease;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .renter-floorplan-status.mobile-prompt-visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .renter-floorplan-title {
+                display: block;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .renter-floorplan-title h1 {
+                font-size: 14px;
+                line-height: 1.15;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .floorplan-results {
+                overflow: visible;
+                padding: 0;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .floorplan-card {
+                min-height: 0;
+                display: block;
+                border: 0;
+                padding: 0;
+                background: transparent;
+                pointer-events: none;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .floorplan-card-body {
+                display: block;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .floorplan-name {
+                font-size: 18px;
+                line-height: 1.1;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .change-floorplan-button {
+                min-height: 34px;
+                width: 100%;
+                border-radius: 999px;
+                font-size: 12px;
+                line-height: 34px;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list {
+                position: fixed;
+                left: 4px;
+                top: calc(100dvh - 164px - env(safe-area-inset-bottom, 0px));
+                z-index: 24;
+                width: 108px;
+                height: 116px;
+                max-height: 116px;
+                padding: 8px 7px;
+                border-radius: 21px;
+                border: 1px solid rgba(255, 255, 255, 0.34);
+                background: rgba(24, 29, 31, 0.62);
+                -webkit-backdrop-filter: blur(28px);
+                backdrop-filter: blur(28px);
+                box-shadow: 0 14px 36px rgba(0, 0, 0, 0.34);
+                scrollbar-width: thin;
+                scrollbar-color: rgba(255, 255, 255, 0.7) rgba(255, 255, 255, 0.16);
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list.units-count-1 {
+                top: calc(100dvh - 106px - env(safe-area-inset-bottom, 0px));
+                height: 44px;
+                max-height: 44px;
+                overflow-y: hidden;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list.units-count-2 {
+                top: calc(100dvh - 128px - env(safe-area-inset-bottom, 0px));
+                height: 80px;
+                max-height: 80px;
+                overflow-y: hidden;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list::-webkit-scrollbar {
+                width: 7px;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list::-webkit-scrollbar-track {
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.14);
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list::-webkit-scrollbar-thumb {
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.62);
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list.needs-selection {
+                border-color: rgba(114, 245, 155, 0.95);
+                box-shadow: 0 0 0 2px rgba(114, 245, 155, 0.32), 0 14px 36px rgba(0, 0, 0, 0.34);
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list.needs-selection::after {
+                content: "Select a unit";
+                position: fixed;
+                left: 120px;
+                top: calc(100dvh - 100px - env(safe-area-inset-bottom, 0px));
+                color: #10251b;
+                background: #72f59b;
+                border-radius: 999px;
+                padding: 7px 10px;
+                font: 800 11px/1 "Helvetica Neue", Arial, sans-serif;
+                white-space: nowrap;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list.needs-selection::before {
+                content: "";
+                position: fixed;
+                left: 106px;
+                top: calc(100dvh - 96px - env(safe-area-inset-bottom, 0px));
+                border-top: 7px solid transparent;
+                border-bottom: 7px solid transparent;
+                border-right: 10px solid #72f59b;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-card {
+                min-height: 30px;
+                padding: 0;
+                justify-content: center;
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.07);
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-number {
+                min-width: 0;
+                min-height: 0;
+                border-radius: 0;
+                background: transparent;
+                box-shadow: none;
+                font-size: 12px;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-price {
+                display: none;
+            }
+            .mobile-unit-actions {
+                position: fixed;
+                right: 12px;
+                top: calc(100dvh - 106px - env(safe-area-inset-bottom, 0px));
+                z-index: 24;
+                left: 134px;
+                display: none;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                gap: 10px;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .mobile-unit-actions {
+                display: grid;
+            }
+            .mobile-unit-action {
+                min-height: 48px;
+                border: 0;
+                border-radius: 999px;
+                padding: 0 10px;
+                color: #10251b;
+                background: #72f59b;
+                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+                font: 800 12px/1.1 "Helvetica Neue", Arial, sans-serif;
+                white-space: nowrap;
+            }
+            .mobile-unit-action.apply {
+                color: #fff;
+                background: #2878b9;
+            }
+            .unit-detail-backdrop {
+                top: 10px;
+                right: 6px;
+                bottom: 10px;
+                left: 10px;
+                width: auto;
+                max-height: calc(100dvh - 20px);
+                transform: translateY(calc(100% + 14px));
+            }
+            .unit-detail-backdrop.active {
+                transform: translateY(0);
+            }
+            .unit-detail-modal {
+                border-radius: 24px;
+                border: 1px solid rgba(255, 255, 255, 0.42);
+                overflow: hidden;
+                box-sizing: border-box;
+            }
             .unit-detail-content {
-                padding: 22px;
+                --unit-detail-scale: 1;
+                height: calc(100% - 12px);
+                padding: 18px 20px 16px;
+                overflow: hidden;
+            }
+            .unit-detail-image {
+                max-height: calc(214px * var(--unit-detail-scale));
+                margin-bottom: calc(14px * var(--unit-detail-scale));
             }
             .unit-detail-header {
-                flex-direction: column;
+                gap: calc(7px * var(--unit-detail-scale));
+                margin-bottom: calc(12px * var(--unit-detail-scale));
+            }
+            .unit-detail-title {
+                font-size: calc(24px * var(--unit-detail-scale));
             }
             .unit-detail-price {
-                white-space: normal;
+                font-size: calc(15px * var(--unit-detail-scale));
+            }
+            .unit-detail-stats {
+                gap: calc(9px * var(--unit-detail-scale));
+                margin-bottom: calc(16px * var(--unit-detail-scale));
+                font-size: calc(14px * var(--unit-detail-scale));
+            }
+            .unit-detail-features-title {
+                margin-bottom: calc(8px * var(--unit-detail-scale));
+                font-size: calc(17px * var(--unit-detail-scale));
             }
             .unit-detail-features {
-                columns: 1;
+                margin-bottom: calc(16px * var(--unit-detail-scale));
+                padding-left: calc(19px * var(--unit-detail-scale));
+                font-size: calc(14px * var(--unit-detail-scale));
+                line-height: 1.28;
+            }
+            .unit-detail-actions {
+                margin-bottom: 0;
+            }
+            .apply-now-button {
+                min-height: calc(40px * var(--unit-detail-scale));
+                padding: 0 calc(22px * var(--unit-detail-scale));
+                font-size: calc(14px * var(--unit-detail-scale));
+                line-height: calc(40px * var(--unit-detail-scale));
             }
         }
         .floor-plan-panel {
@@ -2100,23 +2401,28 @@
     </div>
 
     <section id="renterFloorplanPanel" class="renter-floorplan-panel" aria-live="polite">
+        <button id="mobileAvailabilityButton" class="mobile-availability-button" type="button">see available units</button>
         <div class="renter-floorplan-title">
             <h1>Find your floorplan</h1>
             <div id="renterFloorplanCount" class="renter-floorplan-count">Loading</div>
         </div>
         <div id="bedFilterTabs" class="bed-filter-tabs" role="group" aria-label="Bedroom count"></div>
         <div id="floorplanResults" class="floorplan-results"></div>
-        <button id="changeFloorplanButton" class="change-floorplan-button" type="button">Select a Different Floorplan</button>
+        <button id="changeFloorplanButton" class="change-floorplan-button" type="button">Select a different floorplan</button>
         <div id="availableUnitList" class="available-unit-list"></div>
+        <div id="mobileUnitActions" class="mobile-unit-actions">
+            <button id="mobileSeeDetailsButton" class="mobile-unit-action details" type="button">See Details</button>
+            <button id="mobileApplyNowButton" class="mobile-unit-action apply" type="button">Apply Now</button>
+        </div>
         <div id="renterFloorplanStatus" class="renter-floorplan-status">Choose a bedroom count.</div>
     </section>
 
-    <div id="unitDetailBackdrop" class="unit-detail-backdrop" role="dialog" aria-modal="true" aria-labelledby="unitDetailTitle">
+    <aside id="unitDetailBackdrop" class="unit-detail-backdrop" aria-labelledby="unitDetailTitle">
         <div class="unit-detail-modal">
             <button id="unitDetailClose" class="unit-detail-close" type="button" aria-label="Close unit details">x</button>
             <div id="unitDetailContent" class="unit-detail-content"></div>
         </div>
-    </div>
+    </aside>
 
     <div class="editor-toggles-wrap" id="editorTogglesWrap">
     <div class="splat-editor-toggle-wrap" id="splatEditorToggleWrap">
@@ -2481,7 +2787,19 @@
         selectedFloorplanName: null,
         selectedUnits: [],
         selectedUnitNumber: null,
+        highlightOpacity: 0.32,
     };
+    let renterOrbitTargetAnimation = null;
+    const renterSelectedOrbit = {
+        active: false,
+        target: null,
+        radius: 1,
+        height: 0,
+        angle: 0,
+        speed: -0.0016,
+        speedScale: 1,
+    };
+    const MOBILE_CAMERA_DISTANCE_SCALE = 1.34;
 
     function bedroomLabel(beds) {
         const value = Number(beds);
@@ -2512,7 +2830,204 @@
 
     function setRenterStatus(text) {
         const status = document.getElementById('renterFloorplanStatus');
-        if (status) status.textContent = text || '';
+        if (status) {
+            status.textContent = text || '';
+            if (text !== 'please select a unit to see details.') {
+                status.classList.remove('mobile-prompt-visible');
+            }
+        }
+    }
+
+    function isMobileRenterLayout() {
+        return window.matchMedia?.('(max-width: 720px)').matches;
+    }
+
+    function mobileCameraDistanceScale() {
+        return isMobileRenterLayout() ? MOBILE_CAMERA_DISTANCE_SCALE : 1;
+    }
+
+    function applyMobileCameraDistance(position, target, scale = mobileCameraDistanceScale()) {
+        if (!position || !target || scale === 1) return;
+        position.x = target.x + (position.x - target.x) * scale;
+        position.y = target.y + (position.y - target.y) * scale;
+        position.z = target.z + (position.z - target.z) * scale;
+    }
+
+    function openMobileFloorplanSelector() {
+        if (!isMobileRenterLayout()) return;
+        const panel = document.getElementById('renterFloorplanPanel');
+        panel?.classList.remove('mobile-closed');
+        panel?.classList.add('mobile-selector-open');
+        document.getElementById('availableUnitList')?.classList.remove('needs-selection');
+    }
+
+    function collapseMobileFloorplanSelector() {
+        if (!isMobileRenterLayout()) return;
+        document.getElementById('renterFloorplanPanel')?.classList.remove('mobile-selector-open', 'mobile-closed');
+    }
+
+    function promptMobileUnitSelection() {
+        setRenterStatus('please select a unit to see details.');
+        document.getElementById('renterFloorplanStatus')?.classList.add('mobile-prompt-visible');
+        const list = document.getElementById('availableUnitList');
+        if (!list) return;
+        list.classList.add('needs-selection');
+        window.clearTimeout(promptMobileUnitSelection.timeoutId);
+        promptMobileUnitSelection.timeoutId = window.setTimeout(() => {
+            list.classList.remove('needs-selection');
+            document.getElementById('renterFloorplanStatus')?.classList.remove('mobile-prompt-visible');
+        }, 2600);
+    }
+
+    promptMobileUnitSelection.timeoutId = 0;
+
+    function selectedAvailableUnit() {
+        if (!renterFloorplanState.selectedUnitNumber) return null;
+        return renterFloorplanState.selectedUnits.find((entry) => String(entry.unit_number) === String(renterFloorplanState.selectedUnitNumber)) || null;
+    }
+
+    function openSelectedUnitDetailFromAction() {
+        const unit = selectedAvailableUnit();
+        if (!unit) {
+            promptMobileUnitSelection();
+            return;
+        }
+        openUnitDetail(unit.unit_number, { focusCamera: false });
+    }
+
+    function fitMobileUnitDetailModal() {
+        if (!isMobileRenterLayout()) return;
+        const content = document.getElementById('unitDetailContent');
+        if (!content) return;
+        content.style.setProperty('--unit-detail-scale', '1');
+        requestAnimationFrame(() => {
+            const availableHeight = content.clientHeight;
+            const neededHeight = content.scrollHeight;
+            if (!availableHeight || !neededHeight || neededHeight <= availableHeight) return;
+            const scale = Math.max(0.72, Math.min(1, availableHeight / neededHeight));
+            content.style.setProperty('--unit-detail-scale', scale.toFixed(3));
+        });
+    }
+
+    function setHighlightOpacity(value) {
+        const next = Number(value);
+        if (!Number.isFinite(next)) return;
+        renterFloorplanState.highlightOpacity = Math.min(0.9, Math.max(0.15, next));
+        window.__roomKmlOverlay?.setSelectedStackCubeOpacity?.(renterFloorplanState.highlightOpacity);
+    }
+
+    function stopSelectedUnitOrbit() {
+        renterSelectedOrbit.active = false;
+        renterSelectedOrbit.target = null;
+    }
+
+    function startSelectedUnitOrbit(target, position, selectedCount = 1) {
+        if (!target || !position) return;
+        const offsetX = position.x - target.x;
+        const offsetZ = position.z - target.z;
+        const radius = Math.hypot(offsetX, offsetZ);
+        if (!Number.isFinite(radius) || radius < 0.08) return;
+        renterSelectedOrbit.active = true;
+        renterSelectedOrbit.target = target.clone();
+        renterSelectedOrbit.radius = radius;
+        renterSelectedOrbit.height = position.y;
+        renterSelectedOrbit.angle = Math.atan2(offsetX, offsetZ);
+        renterSelectedOrbit.speed = Number.isFinite(parameters?.animation?.speed)
+            ? parameters.animation.speed
+            : -0.0016;
+        const globalOrbitRadius = Number.isFinite(parameters?.animation?.startRadius)
+            ? parameters.animation.startRadius
+            : radius;
+        renterSelectedOrbit.speedScale = Math.min(3.8, Math.max(0.75, globalOrbitRadius / Math.max(radius, 0.08)));
+    }
+
+    function updateSelectedUnitOrbit(now = performance.now(), deltaSeconds = 0.016) {
+        if (!renterSelectedOrbit.active || !renterSelectedOrbit.target) return false;
+        if (typeof controls === 'undefined' || !controls?.target) return false;
+        if (typeof camera === 'undefined' || !camera?.position) return false;
+        renterSelectedOrbit.angle += renterSelectedOrbit.speed * renterSelectedOrbit.speedScale * deltaSeconds * 60;
+        controls.target.copy(renterSelectedOrbit.target);
+        camera.position.set(
+            renterSelectedOrbit.target.x + Math.sin(renterSelectedOrbit.angle) * renterSelectedOrbit.radius,
+            renterSelectedOrbit.height,
+            renterSelectedOrbit.target.z + Math.cos(renterSelectedOrbit.angle) * renterSelectedOrbit.radius
+        );
+        camera.lookAt(controls.target);
+        manualFocusTargetY = renterSelectedOrbit.target.y;
+        controls.update();
+        return true;
+    }
+
+    function enforceCameraMinY() {
+        if (typeof camera === 'undefined' || !camera?.position) return false;
+        const minY = Number(parameters?.camera?.minY);
+        if (!Number.isFinite(minY) || camera.position.y >= minY) return false;
+        camera.position.y = minY;
+        if (typeof controls !== 'undefined' && controls?.target) {
+            camera.lookAt(controls.target);
+        }
+        return true;
+    }
+
+    function focusCameraOnStackFrame(frame, durationMs = 1050) {
+        if (!frame || !Number.isFinite(frame.x) || !Number.isFinite(frame.y) || !Number.isFinite(frame.z)) return;
+        if (typeof controls === 'undefined' || !controls?.target) return;
+        if (typeof camera === 'undefined' || !camera?.position) return;
+        if (typeof pauseCameraAutomationFromInteraction === 'function') pauseCameraAutomationFromInteraction();
+        if (renterOrbitTargetAnimation) cancelAnimationFrame(renterOrbitTargetAnimation);
+        stopSelectedUnitOrbit();
+
+        const startTarget = controls.target.clone();
+        const startPosition = camera.position.clone();
+        const endTarget = new Vector3(frame.x, frame.y, frame.z);
+        const radius = Math.max(0.08, Number(frame.radius) || 0.08);
+        const aspect = Math.max(0.5, window.innerWidth / Math.max(window.innerHeight, 1));
+        const verticalFov = MathUtils.degToRad(camera.fov || 50);
+        const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect);
+        const fitDistance = Math.max(
+            radius / Math.tan(verticalFov / 2),
+            radius / Math.tan(horizontalFov / 2)
+        );
+        const selectedCount = Number(frame.count) || 1;
+        const distanceScale = mobileCameraDistanceScale();
+        const minDistance = (selectedCount <= 1 ? 0.74 : 1.05) * distanceScale;
+        const maxDistance = (selectedCount <= 1 ? 1.18 : selectedCount > 35 ? 3.45 : selectedCount > 18 ? 3.0 : 2.65) * distanceScale;
+        const desiredDistance = Math.min(maxDistance, Math.max(minDistance, fitDistance * 1.85 * distanceScale));
+        const rawRadial = frame.radialDirection || {};
+        const horizontalDirection = new Vector3(Number(rawRadial.x) || 0, 0, Number(rawRadial.z) || 0);
+        if (horizontalDirection.lengthSq() < 0.0001) horizontalDirection.set(0, 0, -1);
+        horizontalDirection.normalize();
+        const interiorView = frame.viewSide === 'interior';
+        if (interiorView) horizontalDirection.multiplyScalar(-1);
+        const endPosition = endTarget.clone().add(horizontalDirection.multiplyScalar(desiredDistance));
+        const exteriorHeight = endTarget.y + Math.max(0.36, desiredDistance * 0.34);
+        const interiorHeight = Math.max(
+            Number(frame.assetTopY) + 0.22,
+            endTarget.y + Math.max(0.48, desiredDistance * 0.42)
+        );
+        endPosition.y = interiorView ? interiorHeight : exteriorHeight;
+        const startedAt = performance.now();
+        const animateFrame = (now) => {
+            const progress = Math.min(Math.max((now - startedAt) / durationMs, 0), 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            controls.target.lerpVectors(startTarget, endTarget, eased);
+            camera.position.lerpVectors(startPosition, endPosition, eased);
+            camera.lookAt(controls.target);
+            manualFocusTargetY = controls.target.y;
+            controls.update();
+            if (progress < 1) {
+                renterOrbitTargetAnimation = requestAnimationFrame(animateFrame);
+                return;
+            }
+            controls.target.copy(endTarget);
+            camera.position.copy(endPosition);
+            camera.lookAt(controls.target);
+            manualFocusTargetY = endTarget.y;
+            controls.update();
+            renterOrbitTargetAnimation = null;
+            startSelectedUnitOrbit(endTarget, endPosition, selectedCount);
+        };
+        renterOrbitTargetAnimation = requestAnimationFrame(animateFrame);
     }
 
     function selectedPlan() {
@@ -2570,6 +3085,9 @@
                 renterFloorplanState.selectedFloorplanName = null;
                 renterFloorplanState.selectedUnits = [];
                 renterFloorplanState.selectedUnitNumber = null;
+                closeUnitDetail({ clearSelection: false });
+                stopSelectedUnitOrbit();
+                openMobileFloorplanSelector();
                 window.__roomKmlOverlay?.clearStackSelection?.({ statusText: 'Choose a floorplan to highlight available units' });
                 renderBedFilters();
                 renderFloorplanCards();
@@ -2594,10 +3112,12 @@
     async function highlightAvailableUnitsForFloorplan(plan) {
         const panel = document.getElementById('renterFloorplanPanel');
         if (panel) panel.classList.add('collapsed');
+        collapseMobileFloorplanSelector();
         renterFloorplanState.selectedPlan = plan;
         renterFloorplanState.selectedFloorplanName = plan.floorplan_name;
         renterFloorplanState.selectedUnits = [];
         renterFloorplanState.selectedUnitNumber = null;
+        closeUnitDetail({ clearSelection: false });
         renderFloorplanCards();
         renderAvailableUnitList();
         setRenterStatus(`Loading available ${plan.floorplan_name} units...`);
@@ -2609,6 +3129,10 @@
             ]);
             const unitNumbers = units.map((unit) => unit.unit_number).filter(Boolean);
             renterFloorplanState.selectedUnits = units;
+            const shouldAutoSelectSingleUnit = unitNumbers.length === 1;
+            if (shouldAutoSelectSingleUnit) {
+                renterFloorplanState.selectedUnitNumber = String(unitNumbers[0]);
+            }
             if (!overlay) {
                 setRenterStatus('3D floorplan overlay is still loading.');
                 return;
@@ -2616,9 +3140,21 @@
             overlay.selectStackUnits(unitNumbers, {
                 statusText: `Highlighted ${unitNumbers.length} available ${plan.floorplan_name} unit${unitNumbers.length === 1 ? '' : 's'}`,
             });
+            overlay.setSelectedStackCubeOpacity?.(renterFloorplanState.highlightOpacity);
+            const focusFrame = shouldAutoSelectSingleUnit
+                ? overlay.getStackFrameForUnits?.([unitNumbers[0]])
+                : overlay.getSelectedStackFrame?.() || overlay.getSelectedStackCenter?.();
+            focusCameraOnStackFrame(focusFrame);
             renderFloorplanCards();
             renderAvailableUnitList();
-            setRenterStatus(`${unitNumbers.length} available ${plan.floorplan_name} unit${unitNumbers.length === 1 ? '' : 's'} highlighted.`);
+            if (shouldAutoSelectSingleUnit) {
+                if (!isMobileRenterLayout()) {
+                    openUnitDetail(unitNumbers[0], { focusCamera: false });
+                }
+                setRenterStatus(`${plan.floorplan_name} unit ${unitNumbers[0]} selected.`);
+            } else {
+                setRenterStatus(`${unitNumbers.length} available ${plan.floorplan_name} units highlighted.`);
+            }
         } catch (error) {
             console.warn('Failed to highlight available units', error);
             setRenterStatus('Could not load available units for that floorplan.');
@@ -2635,6 +3171,8 @@
         const activePlan = selectedPlan();
         const collapsed = !!activePlan;
         if (panel) panel.classList.toggle('collapsed', collapsed);
+        const title = panel?.querySelector('.renter-floorplan-title h1');
+        if (title) title.textContent = collapsed ? activePlan.floorplan_name : 'Find your floorplan';
         if (changeButton) changeButton.style.display = collapsed ? '' : 'none';
         const plans = collapsed
             ? [activePlan]
@@ -2683,8 +3221,15 @@
         const list = document.getElementById('availableUnitList');
         if (!list) return;
         list.innerHTML = '';
+        list.classList.remove('needs-selection');
         const activePlan = selectedPlan();
         if (!activePlan) return;
+
+        list.classList.remove('units-count-1', 'units-count-2', 'units-count-3plus');
+        const visibleUnitCount = renterFloorplanState.selectedUnits.length;
+        if (visibleUnitCount === 1) list.classList.add('units-count-1');
+        else if (visibleUnitCount === 2) list.classList.add('units-count-2');
+        else if (visibleUnitCount >= 3) list.classList.add('units-count-3plus');
 
         renterFloorplanState.selectedUnits.forEach((unit) => {
             const card = document.createElement('button');
@@ -2702,7 +3247,14 @@
             price.textContent = unit.rent ? formatCurrency(unit.rent) : 'Price pending';
             card.appendChild(price);
 
-            card.addEventListener('click', () => openUnitDetail(unit.unit_number));
+            card.addEventListener('click', () => {
+                document.getElementById('availableUnitList')?.classList.remove('needs-selection');
+                if (isMobileRenterLayout()) {
+                    selectUnitForMobile(unit.unit_number);
+                } else {
+                    openUnitDetail(unit.unit_number);
+                }
+            });
             list.appendChild(card);
         });
     }
@@ -2712,6 +3264,9 @@
         renterFloorplanState.selectedFloorplanName = null;
         renterFloorplanState.selectedUnits = [];
         renterFloorplanState.selectedUnitNumber = null;
+        closeUnitDetail({ clearSelection: false });
+        stopSelectedUnitOrbit();
+        openMobileFloorplanSelector();
         window.__roomKmlOverlay?.clearStackSelection?.({ statusText: 'Choose a floorplan to highlight available units' });
         renderBedFilters();
         renderFloorplanCards();
@@ -2723,7 +3278,18 @@
         return Array.isArray(plan?.features) ? plan.features.filter(Boolean) : [];
     }
 
-    function openUnitDetail(unitNumber) {
+    function selectUnitForMobile(unitNumber) {
+        const unit = renterFloorplanState.selectedUnits.find((entry) => String(entry.unit_number) === String(unitNumber)) || null;
+        if (!unit) return;
+        renterFloorplanState.selectedUnitNumber = String(unit.unit_number);
+        renderAvailableUnitList();
+        const overlay = window.__roomKmlOverlay;
+        const unitFrame = overlay?.getStackFrameForUnits?.([unit.unit_number]);
+        if (unitFrame) focusCameraOnStackFrame(unitFrame, 950);
+        setRenterStatus(`Unit ${unit.unit_number} selected.`);
+    }
+
+    function openUnitDetail(unitNumber, { focusCamera = true } = {}) {
         const plan = selectedPlan();
         if (!plan) return;
         const unit = renterFloorplanState.selectedUnits.find((entry) => String(entry.unit_number) === String(unitNumber)) || null;
@@ -2731,6 +3297,11 @@
 
         renterFloorplanState.selectedUnitNumber = String(unit.unit_number);
         renderAvailableUnitList();
+        if (focusCamera) {
+            const overlay = window.__roomKmlOverlay;
+            const unitFrame = overlay?.getStackFrameForUnits?.([unit.unit_number]);
+            if (unitFrame) focusCameraOnStackFrame(unitFrame, 950);
+        }
 
         const backdrop = document.getElementById('unitDetailBackdrop');
         const content = document.getElementById('unitDetailContent');
@@ -2792,27 +3363,38 @@
         actions.appendChild(apply);
         content.appendChild(actions);
 
-        const disclaimer = document.createElement('p');
-        disclaimer.className = 'unit-detail-disclaimer';
-        disclaimer.textContent = 'Prices and special offers valid for new residents only. Pricing and availability subject to change at any time. Floorplan images, dimensions, and finishes are representative and may vary by unit.';
-        content.appendChild(disclaimer);
-
         backdrop.classList.add('active');
+        fitMobileUnitDetailModal();
     }
 
-    function closeUnitDetail() {
+    function closeUnitDetail({ clearSelection = true } = {}) {
         document.getElementById('unitDetailBackdrop')?.classList.remove('active');
+        if (clearSelection) {
+            renterFloorplanState.selectedUnitNumber = null;
+            renderAvailableUnitList();
+        }
     }
 
     async function initRenterFloorplanBrowser() {
         const panel = document.getElementById('renterFloorplanPanel');
+        if (isMobileRenterLayout()) panel?.classList.add('mobile-closed');
         stopPanelPropagation(panel);
         stopPanelPropagation(document.getElementById('unitDetailBackdrop'));
+        document.getElementById('mobileAvailabilityButton')?.addEventListener('click', openMobileFloorplanSelector);
         document.getElementById('changeFloorplanButton')?.addEventListener('click', resetFloorplanSelection);
-        document.getElementById('unitDetailClose')?.addEventListener('click', closeUnitDetail);
-        document.getElementById('unitDetailBackdrop')?.addEventListener('click', (event) => {
-            if (event.target === event.currentTarget) closeUnitDetail();
+        document.getElementById('unitDetailClose')?.addEventListener('click', () => {
+            closeUnitDetail({ clearSelection: !isMobileRenterLayout() });
         });
+        document.getElementById('mobileSeeDetailsButton')?.addEventListener('click', openSelectedUnitDetailFromAction);
+        document.getElementById('mobileApplyNowButton')?.addEventListener('click', () => {
+            if (!selectedAvailableUnit()) promptMobileUnitSelection();
+        });
+        window.addEventListener('resize', () => {
+            if (isMobileRenterLayout() || selectedPlan()) return;
+            panel?.classList.remove('mobile-closed', 'mobile-selector-open');
+        });
+        window.addEventListener('resize', fitMobileUnitDetailModal);
+        setHighlightOpacity(renterFloorplanState.highlightOpacity);
         try {
             renterFloorplanState.floorplans = await ApartmentUnitsData.fetchCanyonVistaFloorplans();
             const availableBeds = renterFloorplanState.floorplans.map((plan) => Number(plan.beds)).filter(Number.isFinite);
@@ -2992,7 +3574,7 @@
     // Parameters
     const parameters = {
         camera: {
-            minY: -2,
+            minY: 0.035,
             maxZoomOut: 1000,
             startPosition: { x: 0.2, y: 0.55, z: 2.8 },
         },
@@ -3244,6 +3826,7 @@
     renderer.setClearColor(new Color(0x000000));
     renderer.setPixelRatio(Math.min(window.devicePixelRatio * 0.8, rendererPixelRatioCap));
     document.body.appendChild(renderer.domElement);
+    renderer.domElement.style.touchAction = 'none';
     const tapdotLabelsLayerEl = document.getElementById('tapdot-labels-layer');
     if (tapdotLabelsLayerEl) document.body.appendChild(tapdotLabelsLayerEl);
 
@@ -3264,6 +3847,7 @@
         controls.zoomToCursor = true;
     }
 	    controls.target.set(parameters.scene.origin.x, parameters.scene.origin.y, parameters.scene.origin.z);
+        applyMobileCameraDistance(camera.position, controls.target);
 	    controls.update();
 
 	    function enablePanelDragPassThrough(panel, canvas) {
@@ -3349,7 +3933,115 @@
 	        };
 	    }
 
+        function enableMobileSceneDragPassThrough(canvas) {
+            if (!canvas) return;
+            const forwardedFlag = '__mobileSceneForwarded';
+            let forwardingPointerId = null;
+            const interactiveSelector = [
+                'button',
+                'input',
+                'select',
+                'textarea',
+                'label',
+                'a',
+                '[role="button"]',
+                '[tabindex]',
+                '#overlay-ui',
+                '.tapdot-popup',
+                '.details-box',
+                '.menu-container',
+                '.lot-editor-toggle-wrap',
+                '.editor-toggles-wrap',
+                '.lot-editor-panel',
+                '.animation-editor-panel',
+                '.splat-editor-panel',
+                '.renter-floorplan-panel',
+                '.unit-detail-backdrop',
+                '.mobile-unit-actions',
+                '.available-unit-list'
+            ].join(', ');
+
+            const isInteractiveTarget = (target) => (
+                target instanceof Element && Boolean(target.closest(interactiveSelector))
+            );
+
+            const shouldForward = (event) => {
+                if (!isMobileRenterLayout()) return false;
+                if (event?.[forwardedFlag]) return false;
+                if (event?.target === canvas) return false;
+                if (event?.pointerType && event.pointerType !== 'touch' && event.pointerType !== 'pen') return false;
+                if (!Number.isFinite(event?.clientX) || !Number.isFinite(event?.clientY)) return false;
+                if (isInteractiveTarget(event.target)) return false;
+                const elementAtPoint = document.elementFromPoint(event.clientX, event.clientY);
+                if (isInteractiveTarget(elementAtPoint)) return false;
+                const bounds = canvas.getBoundingClientRect();
+                return (
+                    event.clientX >= bounds.left &&
+                    event.clientX <= bounds.right &&
+                    event.clientY >= bounds.top &&
+                    event.clientY <= bounds.bottom
+                );
+            };
+
+            const forward = (event, type) => {
+                const synthetic = new PointerEvent(type, {
+                    bubbles: true,
+                    cancelable: true,
+                    composed: true,
+                    pointerId: event.pointerId,
+                    pointerType: event.pointerType || 'touch',
+                    isPrimary: event.isPrimary !== false,
+                    button: event.button,
+                    buttons: event.buttons,
+                    clientX: event.clientX,
+                    clientY: event.clientY,
+                    screenX: event.screenX,
+                    screenY: event.screenY,
+                    ctrlKey: event.ctrlKey,
+                    shiftKey: event.shiftKey,
+                    altKey: event.altKey,
+                    metaKey: event.metaKey,
+                });
+                try {
+                    Object.defineProperty(synthetic, forwardedFlag, { value: true });
+                } catch {
+                    // Ignore if the browser prevents tagging synthetic events.
+                }
+                canvas.dispatchEvent(synthetic);
+            };
+
+            window.addEventListener('pointerdown', (event) => {
+                if (!shouldForward(event)) return;
+                forwardingPointerId = event.pointerId;
+                event.preventDefault();
+                forward(event, 'pointerdown');
+            }, { capture: true, passive: false });
+
+            window.addEventListener('pointermove', (event) => {
+                if (event?.[forwardedFlag]) return;
+                if (forwardingPointerId === null || event.pointerId !== forwardingPointerId) return;
+                event.preventDefault();
+                forward(event, 'pointermove');
+            }, { capture: true, passive: false });
+
+            window.addEventListener('pointerup', (event) => {
+                if (event?.[forwardedFlag]) return;
+                if (forwardingPointerId === null || event.pointerId !== forwardingPointerId) return;
+                event.preventDefault();
+                forward(event, 'pointerup');
+                forwardingPointerId = null;
+            }, { capture: true, passive: false });
+
+            window.addEventListener('pointercancel', (event) => {
+                if (event?.[forwardedFlag]) return;
+                if (forwardingPointerId === null || event.pointerId !== forwardingPointerId) return;
+                forward(event, 'pointercancel');
+                forwardingPointerId = null;
+            }, { capture: true });
+        }
+
 	    enablePanelDragPassThrough(document.getElementById('unitEditorPanel'), renderer.domElement);
+        enableMobileSceneDragPassThrough(renderer.domElement);
 
     import('../shared/obj-home-editor.mjs').then(({ initObjHomeEditor }) => {
         window.__homeEditor = initObjHomeEditor({
@@ -3460,13 +4152,7 @@
     controls.addEventListener('change', () => {
         if (typeof tapFocusTransition !== 'undefined' && tapFocusTransition.active) return;
         // Min Y rebound: global floor only
-        const minY = parameters.camera.minY;
-        if (camera.position.y < minY) {
-            const dist = camera.position.distanceTo(controls.target);
-            const distanceScale = Math.min(3, Math.max(0.6, dist / 1.2));
-            const effectiveSpeed = parameters.rebound.speed * distanceScale;
-            camera.position.y += (minY - camera.position.y) * effectiveSpeed;
-        }
+        enforceCameraMinY();
 
         // Restrict target movement on X and Z axes (when targetLimit is set)
         const tl = parameters.scene.targetLimit;
@@ -3622,6 +4308,7 @@
                 viewConfig.startPosition.y,
                 viewConfig.startPosition.z
             );
+            applyMobileCameraDistance(camera.position, controls.target);
         }
 
         if (Number.isFinite(viewConfig.northDirection)) {
@@ -4610,6 +5297,7 @@
         if (!checkpoint) return;
         camera.position.set(checkpoint.position.x, checkpoint.position.y, checkpoint.position.z);
         controls.target.set(checkpoint.lookAt.x, checkpoint.lookAt.y, checkpoint.lookAt.z);
+        applyMobileCameraDistance(camera.position, controls.target);
         camera.lookAt(controls.target);
         controls.update();
     }
@@ -4642,6 +5330,7 @@
         } else {
             controls.target.copy(tempPathLookAt);
         }
+        applyMobileCameraDistance(camera.position, controls.target);
         camera.lookAt(controls.target);
     }
 
@@ -4848,6 +5537,7 @@
         if (cp0) {
             camera.position.set(cp0.position.x, cp0.position.y, cp0.position.z);
             controls.target.set(primaryFocus.x, primaryFocus.y, primaryFocus.z);
+            applyMobileCameraDistance(camera.position, controls.target);
             camera.lookAt(controls.target);
             controls.update();
         }
@@ -4927,12 +5617,15 @@
         if (!isAnimatingToNorth) {
             if (pathAnimationState.enabled && pathAnimationState.playing) {
                 updatePathAnimation(deltaSeconds);
+            } else if (updateSelectedUnitOrbit(now, deltaSeconds)) {
+                // Selected floorplan orbit handled above.
             } else if (autoRotate) {
                 angle += parameters.animation.speed;
                 const c = parameters.animation.center;
-                camera.position.x = c.x + Math.sin(angle) * parameters.animation.startRadius;
-                camera.position.z = c.z + Math.cos(angle) * parameters.animation.startRadius;
-                camera.position.y = c.y + parameters.camera.startPosition.y;
+                const scaledStartRadius = parameters.animation.startRadius * mobileCameraDistanceScale();
+                camera.position.x = c.x + Math.sin(angle) * scaledStartRadius;
+                camera.position.z = c.z + Math.cos(angle) * scaledStartRadius;
+                camera.position.y = c.y + parameters.camera.startPosition.y * mobileCameraDistanceScale();
                 camera.lookAt(controls.target);
             }
         }
@@ -5045,6 +5738,7 @@
         updateCameraAnimation();
         updateTapFocusTransition(now);
         updateTapFocusFeedback(now);
+        enforceCameraMinY();
 
         // Min Y: sync orbit polar limit. When minY >= targetY, cap polar so camera can't go below minY.
         // When minY < targetY, allow full descent (maxPolarAngle ~180°) so user can orbit below target down to minY.
@@ -5076,6 +5770,7 @@
             tapFocusState.debug.transitionActive = false;
             tapFocusState.debug.transitionProgress = 1;
         }
+        stopSelectedUnitOrbit();
         autoRotate = false;
         if (pathAnimationState.playing) {
             pathAnimationState.playing = false;
@@ -5168,20 +5863,49 @@
         return Math.sqrt(dx * dx + dy * dy) <= tapDotClickMoveThreshold;
     }
 
-    function isClickOn3DScene(event) {
-        return event?.target === renderer.domElement;
+    function isPointerOn3DScene(event) {
+        if (!event || !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) return false;
+        const target = event.target;
+        const interactiveUiSelector = [
+            '#overlay-ui',
+            '.tapdot-popup',
+            '.details-box',
+            '.menu-container',
+            '.lot-editor-toggle-wrap',
+            '.editor-toggles-wrap',
+            '.lot-editor-panel',
+            '.animation-editor-panel',
+            '.splat-editor-panel',
+            '.renter-floorplan-panel',
+            '.unit-detail-backdrop',
+            '.mobile-unit-actions',
+            '.available-unit-list'
+        ].join(', ');
+        if (target?.closest?.(interactiveUiSelector)) return false;
+
+        const elementAtPoint = document.elementFromPoint(event.clientX, event.clientY);
+        if (elementAtPoint?.closest?.(interactiveUiSelector)) return false;
+        if (elementAtPoint === renderer.domElement || renderer.domElement.contains(elementAtPoint)) return true;
+
+        const bounds = renderer.domElement.getBoundingClientRect();
+        return (
+            event.clientX >= bounds.left &&
+            event.clientX <= bounds.right &&
+            event.clientY >= bounds.top &&
+            event.clientY <= bounds.bottom
+        );
     }
     window.addEventListener('click', (event) => {
         if (performance.now() < suppressTapDotClickUntil) return;
         const handledTapDot = handleTapDotActivation(event);
-        if (!handledTapDot && wasTapAtSameSpot(event) && isClickOn3DScene(event)) focusCameraOnTappedPoint(event);
+        if (!handledTapDot && wasTapAtSameSpot(event) && isPointerOn3DScene(event)) focusCameraOnTappedPoint(event);
     });
 
     window.addEventListener('pointerup', (event) => {
         if (!event.isPrimary) return;
         if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
         const handledTapDot = handleTapDotActivation(event);
-        const focused = handledTapDot ? false : (wasTapAtSameSpot(event) && isClickOn3DScene(event) && focusCameraOnTappedPoint(event));
+        const focused = handledTapDot ? false : (wasTapAtSameSpot(event) && isPointerOn3DScene(event) && focusCameraOnTappedPoint(event));
         if (handledTapDot || focused) suppressTapDotClickUntil = performance.now() + 700;
     }, { passive: true });
 
@@ -5195,7 +5919,7 @@
             target: event.target
         };
         const handledTapDot = handleTapDotActivation(syntheticTapEvent);
-        const focused = handledTapDot ? false : (wasTapAtSameSpot(syntheticTapEvent) && isClickOn3DScene(syntheticTapEvent) && focusCameraOnTappedPoint(syntheticTapEvent));
+        const focused = handledTapDot ? false : (wasTapAtSameSpot(syntheticTapEvent) && isPointerOn3DScene(syntheticTapEvent) && focusCameraOnTappedPoint(syntheticTapEvent));
         if (handledTapDot || focused) suppressTapDotClickUntil = performance.now() + 700;
     }, { passive: true });
 
