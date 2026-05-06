@@ -1690,6 +1690,7 @@
             font: 750 12px/32px "Helvetica Neue", Arial, sans-serif;
         }
         .mobile-availability-button,
+        .mobile-floorplan-close,
         .mobile-unit-actions {
             display: none;
         }
@@ -1916,6 +1917,26 @@
             }
             .renter-floorplan-panel.mobile-selector-open .mobile-availability-button {
                 display: none;
+            }
+            .renter-floorplan-panel.mobile-selector-open .mobile-floorplan-close {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                z-index: 3;
+                display: inline-flex;
+                width: 34px;
+                height: 34px;
+                align-items: center;
+                justify-content: center;
+                border: 0;
+                border-radius: 999px;
+                color: #303638;
+                background: rgba(255, 255, 255, 0.86);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+                font: 500 22px/1 "Helvetica Neue", Arial, sans-serif;
+            }
+            .renter-floorplan-panel.mobile-selector-open .renter-floorplan-title {
+                padding-right: 42px;
             }
             .renter-floorplan-panel.mobile-selector-open .floorplan-results {
                 flex: 1 1 auto;
@@ -2402,6 +2423,7 @@
 
     <section id="renterFloorplanPanel" class="renter-floorplan-panel" aria-live="polite">
         <button id="mobileAvailabilityButton" class="mobile-availability-button" type="button">see available units</button>
+        <button id="mobileFloorplanClose" class="mobile-floorplan-close" type="button" aria-label="Close floorplan selector">x</button>
         <div class="renter-floorplan-title">
             <h1>Find your floorplan</h1>
             <div id="renterFloorplanCount" class="renter-floorplan-count">Loading</div>
@@ -2866,6 +2888,29 @@
         document.getElementById('renterFloorplanPanel')?.classList.remove('mobile-selector-open', 'mobile-closed');
     }
 
+    function closeMobileFloorplanSelectorToStart() {
+        if (!isMobileRenterLayout()) return;
+        renterFloorplanState.selectedPlan = null;
+        renterFloorplanState.selectedFloorplanName = null;
+        renterFloorplanState.selectedUnits = [];
+        renterFloorplanState.selectedUnitNumber = null;
+        closeUnitDetail({ clearSelection: false });
+        stopSelectedUnitOrbit();
+        document.getElementById('availableUnitList')?.classList.remove('needs-selection');
+        document.getElementById('renterFloorplanStatus')?.classList.remove('mobile-prompt-visible');
+        window.__roomKmlOverlay?.clearStackSelection?.({ statusText: 'Choose a floorplan to highlight available units' });
+        if (typeof setActiveHole === 'function') {
+            setActiveHole(activeHoleIndex || 0, { resetCamera: true });
+        }
+        const panel = document.getElementById('renterFloorplanPanel');
+        panel?.classList.remove('collapsed', 'mobile-selector-open');
+        panel?.classList.add('mobile-closed');
+        renderBedFilters();
+        renderFloorplanCards();
+        renderAvailableUnitList();
+        setRenterStatus('Select a floorplan to highlight available units.');
+    }
+
     function promptMobileUnitSelection() {
         setRenterStatus('please select a unit to see details.');
         document.getElementById('renterFloorplanStatus')?.classList.add('mobile-prompt-visible');
@@ -2969,6 +3014,20 @@
         return true;
     }
 
+    function cameraFlightDuration(startPosition, endPosition, startTarget, endTarget, minimumDurationMs = 950) {
+        const minDuration = Math.max(600, Number(minimumDurationMs) || 950);
+        if (!startPosition || !endPosition || !startTarget || !endTarget) return minDuration;
+        const cameraDistance = startPosition.distanceTo(endPosition);
+        const targetDistance = startTarget.distanceTo(endTarget);
+        const blendedTravel = (cameraDistance * 0.7) + (targetDistance * 0.65);
+        const travelDistance = Math.max(cameraDistance, targetDistance * 1.25, blendedTravel);
+        const freeCloseDistance = isMobileRenterLayout() ? 0.55 : 0.3;
+        const msPerSceneUnit = isMobileRenterLayout() ? 760 : 1350;
+        const maxDuration = isMobileRenterLayout() ? 3100 : 4200;
+        const extraDuration = Math.max(0, travelDistance - freeCloseDistance) * msPerSceneUnit;
+        return Math.min(maxDuration, minDuration + extraDuration);
+    }
+
     function focusCameraOnStackFrame(frame, durationMs = 1050) {
         if (!frame || !Number.isFinite(frame.x) || !Number.isFinite(frame.y) || !Number.isFinite(frame.z)) return;
         if (typeof controls === 'undefined' || !controls?.target) return;
@@ -3006,9 +3065,10 @@
             endTarget.y + Math.max(0.48, desiredDistance * 0.42)
         );
         endPosition.y = interiorView ? interiorHeight : exteriorHeight;
+        const flightDurationMs = cameraFlightDuration(startPosition, endPosition, startTarget, endTarget, durationMs);
         const startedAt = performance.now();
         const animateFrame = (now) => {
-            const progress = Math.min(Math.max((now - startedAt) / durationMs, 0), 1);
+            const progress = Math.min(Math.max((now - startedAt) / flightDurationMs, 0), 1);
             const eased = 1 - Math.pow(1 - progress, 3);
             controls.target.lerpVectors(startTarget, endTarget, eased);
             camera.position.lerpVectors(startPosition, endPosition, eased);
@@ -3141,6 +3201,9 @@
                 statusText: `Highlighted ${unitNumbers.length} available ${plan.floorplan_name} unit${unitNumbers.length === 1 ? '' : 's'}`,
             });
             overlay.setSelectedStackCubeOpacity?.(renterFloorplanState.highlightOpacity);
+            if (shouldAutoSelectSingleUnit) {
+                overlay.setFocusedStackUnit?.(unitNumbers[0]);
+            }
             const focusFrame = shouldAutoSelectSingleUnit
                 ? overlay.getStackFrameForUnits?.([unitNumbers[0]])
                 : overlay.getSelectedStackFrame?.() || overlay.getSelectedStackCenter?.();
@@ -3284,6 +3347,7 @@
         renterFloorplanState.selectedUnitNumber = String(unit.unit_number);
         renderAvailableUnitList();
         const overlay = window.__roomKmlOverlay;
+        overlay?.setFocusedStackUnit?.(unit.unit_number);
         const unitFrame = overlay?.getStackFrameForUnits?.([unit.unit_number]);
         if (unitFrame) focusCameraOnStackFrame(unitFrame, 950);
         setRenterStatus(`Unit ${unit.unit_number} selected.`);
@@ -3297,6 +3361,7 @@
 
         renterFloorplanState.selectedUnitNumber = String(unit.unit_number);
         renderAvailableUnitList();
+        window.__roomKmlOverlay?.setFocusedStackUnit?.(unit.unit_number);
         if (focusCamera) {
             const overlay = window.__roomKmlOverlay;
             const unitFrame = overlay?.getStackFrameForUnits?.([unit.unit_number]);
@@ -3381,6 +3446,7 @@
         stopPanelPropagation(panel);
         stopPanelPropagation(document.getElementById('unitDetailBackdrop'));
         document.getElementById('mobileAvailabilityButton')?.addEventListener('click', openMobileFloorplanSelector);
+        document.getElementById('mobileFloorplanClose')?.addEventListener('click', closeMobileFloorplanSelectorToStart);
         document.getElementById('changeFloorplanButton')?.addEventListener('click', resetFloorplanSelection);
         document.getElementById('unitDetailClose')?.addEventListener('click', () => {
             closeUnitDetail({ clearSelection: !isMobileRenterLayout() });
@@ -3933,115 +3999,7 @@
 	        };
 	    }
 
-        function enableMobileSceneDragPassThrough(canvas) {
-            if (!canvas) return;
-            const forwardedFlag = '__mobileSceneForwarded';
-            let forwardingPointerId = null;
-            const interactiveSelector = [
-                'button',
-                'input',
-                'select',
-                'textarea',
-                'label',
-                'a',
-                '[role="button"]',
-                '[tabindex]',
-                '#overlay-ui',
-                '.tapdot-popup',
-                '.details-box',
-                '.menu-container',
-                '.lot-editor-toggle-wrap',
-                '.editor-toggles-wrap',
-                '.lot-editor-panel',
-                '.animation-editor-panel',
-                '.splat-editor-panel',
-                '.renter-floorplan-panel',
-                '.unit-detail-backdrop',
-                '.mobile-unit-actions',
-                '.available-unit-list'
-            ].join(', ');
-
-            const isInteractiveTarget = (target) => (
-                target instanceof Element && Boolean(target.closest(interactiveSelector))
-            );
-
-            const shouldForward = (event) => {
-                if (!isMobileRenterLayout()) return false;
-                if (event?.[forwardedFlag]) return false;
-                if (event?.target === canvas) return false;
-                if (event?.pointerType && event.pointerType !== 'touch' && event.pointerType !== 'pen') return false;
-                if (!Number.isFinite(event?.clientX) || !Number.isFinite(event?.clientY)) return false;
-                if (isInteractiveTarget(event.target)) return false;
-                const elementAtPoint = document.elementFromPoint(event.clientX, event.clientY);
-                if (isInteractiveTarget(elementAtPoint)) return false;
-                const bounds = canvas.getBoundingClientRect();
-                return (
-                    event.clientX >= bounds.left &&
-                    event.clientX <= bounds.right &&
-                    event.clientY >= bounds.top &&
-                    event.clientY <= bounds.bottom
-                );
-            };
-
-            const forward = (event, type) => {
-                const synthetic = new PointerEvent(type, {
-                    bubbles: true,
-                    cancelable: true,
-                    composed: true,
-                    pointerId: event.pointerId,
-                    pointerType: event.pointerType || 'touch',
-                    isPrimary: event.isPrimary !== false,
-                    button: event.button,
-                    buttons: event.buttons,
-                    clientX: event.clientX,
-                    clientY: event.clientY,
-                    screenX: event.screenX,
-                    screenY: event.screenY,
-                    ctrlKey: event.ctrlKey,
-                    shiftKey: event.shiftKey,
-                    altKey: event.altKey,
-                    metaKey: event.metaKey,
-                });
-                try {
-                    Object.defineProperty(synthetic, forwardedFlag, { value: true });
-                } catch {
-                    // Ignore if the browser prevents tagging synthetic events.
-                }
-                canvas.dispatchEvent(synthetic);
-            };
-
-            window.addEventListener('pointerdown', (event) => {
-                if (!shouldForward(event)) return;
-                forwardingPointerId = event.pointerId;
-                event.preventDefault();
-                forward(event, 'pointerdown');
-            }, { capture: true, passive: false });
-
-            window.addEventListener('pointermove', (event) => {
-                if (event?.[forwardedFlag]) return;
-                if (forwardingPointerId === null || event.pointerId !== forwardingPointerId) return;
-                event.preventDefault();
-                forward(event, 'pointermove');
-            }, { capture: true, passive: false });
-
-            window.addEventListener('pointerup', (event) => {
-                if (event?.[forwardedFlag]) return;
-                if (forwardingPointerId === null || event.pointerId !== forwardingPointerId) return;
-                event.preventDefault();
-                forward(event, 'pointerup');
-                forwardingPointerId = null;
-            }, { capture: true, passive: false });
-
-            window.addEventListener('pointercancel', (event) => {
-                if (event?.[forwardedFlag]) return;
-                if (forwardingPointerId === null || event.pointerId !== forwardingPointerId) return;
-                forward(event, 'pointercancel');
-                forwardingPointerId = null;
-            }, { capture: true });
-        }
-
 	    enablePanelDragPassThrough(document.getElementById('unitEditorPanel'), renderer.domElement);
-        enableMobileSceneDragPassThrough(renderer.domElement);
 
     import('../shared/obj-home-editor.mjs').then(({ initObjHomeEditor }) => {
         window.__homeEditor = initObjHomeEditor({

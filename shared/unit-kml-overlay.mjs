@@ -43,6 +43,8 @@ const STACK_CUBE_COLOR = 0x8fe8ff;
 const STACK_CUBE_OPACITY = 0;
 const SELECTED_STACK_CUBE_COLOR = 0x38f07a;
 const DEFAULT_SELECTED_STACK_CUBE_OPACITY = 0.42;
+const FOCUSED_STACK_SIBLING_OPACITY = 0.08;
+const FOCUSED_STACK_SIBLING_LABEL_OPACITY = 0.15;
 const DEFAULT_FLOOR_ROTATION_DEG = 0;
 const DEFAULT_FLOOR_FLIP_X = true;
 const PLAN_GIZMO_MOVE_COLOR = 0xffd047;
@@ -457,6 +459,7 @@ export function initRoomKmlOverlay({
     stackVisible: true,
     selectedStackUnit: null,
     selectedStackUnits: new Set(),
+    focusedStackUnit: null,
     selectedStackCubeOpacity: DEFAULT_SELECTED_STACK_CUBE_OPACITY,
     stackAsset: { version: 1, property: 'canyon-vista', levels: [] },
     planGizmoGroup: new Group(),
@@ -832,15 +835,23 @@ export function initRoomKmlOverlay({
         const label = String(unit.unit);
         const mesh = makeStackCubeMesh(corners, bottomY, topY, label, level.base);
         if (state.selectedStackUnits.has(label)) {
+          const focused = state.focusedStackUnit && state.selectedStackUnits.has(state.focusedStackUnit);
+          const dimmed = focused && state.focusedStackUnit !== label;
           mesh.material.color.setHex(SELECTED_STACK_CUBE_COLOR);
-          mesh.material.opacity = state.selectedStackCubeOpacity;
-          mesh.renderOrder = 1190;
+          mesh.material.opacity = dimmed ? FOCUSED_STACK_SIBLING_OPACITY : state.selectedStackCubeOpacity;
+          mesh.renderOrder = dimmed ? 1188 : 1190;
         }
         state.stackGroup.add(mesh);
         const [cx, cz] = polygonAverage(corners);
         const sprite = makeUnitLabelSprite(label);
         sprite.position.set(cx, topY + 0.018, cz);
         sprite.visible = state.selectedStackUnits.has(label);
+        if (sprite.visible) {
+          const focused = state.focusedStackUnit && state.selectedStackUnits.has(state.focusedStackUnit);
+          const dimmed = focused && state.focusedStackUnit !== label;
+          sprite.material.opacity = dimmed ? FOCUSED_STACK_SIBLING_LABEL_OPACITY : 1;
+          sprite.renderOrder = dimmed ? 1390 : 1400;
+        }
         sprite.userData.unitNumber = label;
         state.stackGroup.add(sprite);
       });
@@ -872,16 +883,33 @@ export function initRoomKmlOverlay({
   }
 
   function syncStackSelection() {
+    const hasFocusedUnit = state.focusedStackUnit && state.selectedStackUnits.has(state.focusedStackUnit);
     state.stackGroup.traverse((child) => {
       if (child.isMesh && child.userData?.isFloorPlanCube) {
-        const selected = state.selectedStackUnits.has(String(child.userData.unitNumber));
+        const unitNumber = String(child.userData.unitNumber);
+        const selected = state.selectedStackUnits.has(unitNumber);
+        const dimmed = selected && hasFocusedUnit && state.focusedStackUnit !== unitNumber;
         child.material.color.setHex(selected ? SELECTED_STACK_CUBE_COLOR : STACK_CUBE_COLOR);
-        child.material.opacity = selected ? state.selectedStackCubeOpacity : STACK_CUBE_OPACITY;
-        child.renderOrder = selected ? 1190 : 1180;
+        child.material.opacity = selected
+          ? (dimmed ? FOCUSED_STACK_SIBLING_OPACITY : state.selectedStackCubeOpacity)
+          : STACK_CUBE_OPACITY;
+        child.renderOrder = selected ? (dimmed ? 1188 : 1190) : 1180;
       } else if (child.isSprite && child.userData?.isFloorPlanCubeLabel) {
-        child.visible = state.selectedStackUnits.has(String(child.userData.unitNumber));
+        const unitNumber = String(child.userData.unitNumber);
+        const selected = state.selectedStackUnits.has(unitNumber);
+        const dimmed = selected && hasFocusedUnit && state.focusedStackUnit !== unitNumber;
+        child.visible = selected;
+        child.material.opacity = selected ? (dimmed ? FOCUSED_STACK_SIBLING_LABEL_OPACITY : 1) : 0;
+        child.renderOrder = dimmed ? 1390 : 1400;
       }
     });
+  }
+
+  function setFocusedStackUnit(unitNumber = null) {
+    const next = unitNumber == null ? null : String(unitNumber).trim();
+    state.focusedStackUnit = next && state.selectedStackUnits.has(next) ? next : null;
+    syncStackSelection();
+    return state.focusedStackUnit;
   }
 
   function setSelectedStackCubeOpacity(opacity) {
@@ -1100,6 +1128,7 @@ export function initRoomKmlOverlay({
     );
     state.selectedStackUnits = selected;
     state.selectedStackUnit = selected.size === 1 ? Array.from(selected)[0] : null;
+    state.focusedStackUnit = null;
     syncStackSelection();
     if (stackSearchInput) stackSearchInput.value = state.selectedStackUnit || '';
     renderStackSearchDropdown(false);
@@ -1407,6 +1436,7 @@ export function initRoomKmlOverlay({
     state.stackAsset = { version: 1, property: 'canyon-vista', levels: [] };
     state.selectedStackUnit = null;
     state.selectedStackUnits = new Set();
+    state.focusedStackUnit = null;
     if (stackSearchInput) stackSearchInput.value = '';
     disposeStackGroup();
     clearStackGizmo();
@@ -2446,6 +2476,7 @@ export function initRoomKmlOverlay({
     selectStackUnit,
     selectStackUnits,
     clearStackSelection,
+    setFocusedStackUnit,
     toggleStackVisibility,
     setStackVisible(visible) {
       state.stackVisible = !!visible;
@@ -2460,6 +2491,9 @@ export function initRoomKmlOverlay({
     },
     getSelectedStackUnits() {
       return Array.from(state.selectedStackUnits).sort((a, b) => Number(a) - Number(b));
+    },
+    getFocusedStackUnit() {
+      return state.focusedStackUnit;
     },
     getSelectedStackCenter,
     getSelectedStackFrame,
