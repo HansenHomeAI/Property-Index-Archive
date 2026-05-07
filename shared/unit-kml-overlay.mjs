@@ -360,33 +360,33 @@ function makeUnitLabelTexture(text, { hover = false } = {}) {
   const pillR = pillH / 2;
 
   ctx.save();
-  ctx.shadowColor = 'rgba(255, 255, 255, 0.28)';
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
   ctx.shadowBlur = 20;
-  ctx.fillStyle = 'rgba(238, 244, 242, 0.52)';
+  ctx.fillStyle = 'rgba(24, 28, 32, 0.34)';
   roundRect(ctx, pillX, pillY, pillW, pillH, pillR);
   ctx.fill();
   ctx.restore();
 
   ctx.save();
   ctx.filter = 'blur(10px)';
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.30)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
   roundRect(ctx, pillX + 3, pillY + 3, pillW - 6, pillH - 6, pillR - 3);
   ctx.fill();
   ctx.restore();
 
-  ctx.fillStyle = 'rgba(242, 247, 245, 0.38)';
+  ctx.fillStyle = 'rgba(28, 32, 36, 0.30)';
   roundRect(ctx, pillX, pillY, pillW, pillH, pillR);
   ctx.fill();
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
   roundRect(ctx, pillX, pillY, pillW, pillH, pillR);
   ctx.fill();
 
   const borderGrad = ctx.createLinearGradient(pillX, pillY, pillX + pillW, pillY + pillH);
-  borderGrad.addColorStop(0, 'rgba(255, 255, 255, 0.58)');
+  borderGrad.addColorStop(0, 'rgba(255, 255, 255, 0.34)');
   borderGrad.addColorStop(0.41, 'rgba(255, 255, 255, 0)');
   borderGrad.addColorStop(0.57, 'rgba(255, 255, 255, 0)');
-  borderGrad.addColorStop(1, 'rgba(255, 255, 255, 0.58)');
+  borderGrad.addColorStop(1, 'rgba(255, 255, 255, 0.30)');
   ctx.strokeStyle = borderGrad;
   ctx.lineWidth = 2;
   roundRect(ctx, pillX + 1, pillY + 1, pillW - 2, pillH - 2, pillR - 1);
