@@ -3004,6 +3004,8 @@
             display: flex;
             flex-direction: column;
             position: relative;
+            min-height: 0;
+            height: 100%;
         }
         .unit-detail-modal::before {
             content: "";
@@ -3018,13 +3020,30 @@
             mask-composite: exclude;
             padding: 1px;
         }
+        /* Scrolls independently; Apply Now lives in .unit-detail-footer below */
         .unit-detail-content {
             position: relative;
             z-index: 1;
-            padding: 22px 22px 110px;
+            padding: 22px;
+            padding-bottom: 28px;
             color: var(--rf-text);
+            overflow-x: hidden;
             overflow-y: auto;
-            flex: 1 1 auto;
+            -webkit-overflow-scrolling: touch;
+            flex: 1 1 0;
+            min-height: 0;
+        }
+        .unit-detail-footer {
+            flex: 0 0 auto;
+            position: relative;
+            z-index: 3;
+            border-top: 1px solid var(--rf-hairline);
+            background: var(--rf-surface-strong);
+            -webkit-backdrop-filter: blur(28px);
+            backdrop-filter: blur(28px);
+        }
+        .unit-detail-footer:empty {
+            display: none;
         }
         .unit-detail-image {
             display: block;
@@ -3091,18 +3110,14 @@
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.62);
         }
-        /* Sticky footer with action button(s) */
+        /* Action row — pinned by flex layout (.unit-detail-footer), not position:absolute */
         .unit-detail-actions {
-            position: absolute;
-            left: 0; right: 0; bottom: 0;
+            position: static;
             margin: 0;
             padding: 16px 22px calc(18px + env(safe-area-inset-bottom, 0px));
             display: flex;
             gap: 10px;
-            background: linear-gradient(to top, var(--rf-surface-strong) 70%, rgba(20, 24, 28, 0) 100%);
-            -webkit-backdrop-filter: blur(20px);
-            backdrop-filter: blur(20px);
-            z-index: 3;
+            background: transparent;
         }
         .apply-now-button {
             flex: 1 1 auto;
@@ -3152,7 +3167,13 @@
         }
         @media (max-width: 720px) {
             .unit-detail-modal { border-radius: var(--rf-radius-panel); }
-            .unit-detail-content { padding: 22px 22px 120px; height: auto; overflow-y: auto; }
+            .unit-detail-content {
+                padding: 22px 22px 24px;
+                flex: 1 1 0;
+                min-height: 0;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
             .unit-detail-actions { padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
             .unit-detail-image { max-height: calc(220px * var(--unit-detail-scale, 1)); }
         }
@@ -3350,6 +3371,7 @@
         <div class="unit-detail-modal">
             <button id="unitDetailClose" class="unit-detail-close" type="button" aria-label="Close unit details"></button>
             <div id="unitDetailContent" class="unit-detail-content"></div>
+            <footer id="unitDetailFooter" class="unit-detail-footer"></footer>
         </div>
     </aside>
 
@@ -3852,14 +3874,8 @@
         if (!isMobileRenterLayout()) return;
         const content = document.getElementById('unitDetailContent');
         if (!content) return;
+        /* Scroll area is constrained by flex; keep scale uniform (no shrinking). */
         content.style.setProperty('--unit-detail-scale', '1');
-        requestAnimationFrame(() => {
-            const availableHeight = content.clientHeight;
-            const neededHeight = content.scrollHeight;
-            if (!availableHeight || !neededHeight || neededHeight <= availableHeight) return;
-            const scale = Math.max(0.72, Math.min(1, availableHeight / neededHeight));
-            content.style.setProperty('--unit-detail-scale', scale.toFixed(3));
-        });
     }
 
     function setHighlightOpacity(value) {
@@ -4278,9 +4294,11 @@
 
         const backdrop = document.getElementById('unitDetailBackdrop');
         const content = document.getElementById('unitDetailContent');
+        const footer = document.getElementById('unitDetailFooter');
         if (!backdrop || !content) return;
 
-        content.innerHTML = '';
+        content.replaceChildren();
+        footer?.replaceChildren();
         const imageUrl = ApartmentUnitsData.getFloorplanImageUrl(plan.floorplan_image_path);
         if (imageUrl) {
             const image = document.createElement('img');
@@ -4335,7 +4353,11 @@
         apply.textContent = 'Apply Now';
         apply.addEventListener('click', () => setRenterStatus('Leasing application link coming soon.'));
         actions.appendChild(apply);
-        content.appendChild(actions);
+        if (footer) {
+            footer.appendChild(actions);
+        } else {
+            content.appendChild(actions);
+        }
 
         backdrop.classList.add('active');
         fitMobileUnitDetailModal();
@@ -4343,6 +4365,8 @@
 
     function closeUnitDetail({ clearSelection = true } = {}) {
         document.getElementById('unitDetailBackdrop')?.classList.remove('active');
+        document.getElementById('unitDetailContent')?.replaceChildren();
+        document.getElementById('unitDetailFooter')?.replaceChildren();
         if (clearSelection) {
             renterFloorplanState.selectedUnitNumber = null;
             renderAvailableUnitList();
