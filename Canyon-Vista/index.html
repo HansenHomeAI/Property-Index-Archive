@@ -2398,6 +2398,10 @@
             --rf-primary: #ffffff;
             --rf-primary-hover: #f1f1f1;
             --rf-on-primary: #0d0e10;
+            --rf-sage: #72f59b;
+            --rf-sage-soft: rgba(114, 245, 155, 0.18);
+            --rf-sage-ring: rgba(114, 245, 155, 0.48);
+            --rf-on-sage: #0e2a18;
             --rf-secondary-bg: rgba(255, 255, 255, 0.10);
             --rf-secondary-bg-hover: rgba(255, 255, 255, 0.16);
             --rf-radius-panel: 28px;
@@ -2430,6 +2434,13 @@
             border: 1px solid var(--rf-hairline-soft);
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
+            transition:
+                max-height 260ms cubic-bezier(0.22, 1, 0.36, 1),
+                width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+                padding 220ms ease,
+                border-radius 260ms cubic-bezier(0.22, 1, 0.36, 1),
+                background 220ms ease,
+                box-shadow 220ms ease;
         }
         .renter-floorplan-panel::before {
             border-radius: inherit;
@@ -2456,38 +2467,77 @@
         .bed-filter-tabs {
             box-shadow: var(--rf-category-shadow);
             border-radius: var(--rf-radius-pill);
-            padding: 5px;
-            gap: 4px;
+            --bed-tab-count: 4;
+            --bed-active-index: 0;
+            --bed-tab-inset: 8px;
+            position: relative;
+            padding: var(--bed-tab-inset);
+            gap: 0;
+            height: 64px !important;
+            min-height: 64px !important;
+            max-height: 64px !important;
             background: rgba(255, 255, 255, 0.02);
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(var(--bed-tab-count), minmax(0, 1fr));
             align-items: stretch;
             overflow: hidden;
+            box-sizing: border-box;
+        }
+        .bed-filter-tabs::before {
+            content: "";
+            position: absolute;
+            z-index: 0;
+            top: var(--bed-tab-inset);
+            bottom: var(--bed-tab-inset);
+            left: calc(var(--bed-tab-inset) + ((100% - (var(--bed-tab-inset) * 2)) / var(--bed-tab-count)) * var(--bed-active-index));
+            width: calc((100% - (var(--bed-tab-inset) * 2)) / var(--bed-tab-count));
+            border-radius: 999px;
+            background: var(--rf-primary);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.38);
+            pointer-events: none;
+            transition: left 240ms cubic-bezier(0.22, 1, 0.36, 1);
         }
         .bed-filter-tab {
-            flex: 1 1 0;
+            position: relative;
+            z-index: 1;
             min-width: 0;
-            height: 38px;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
             border-radius: 999px;
             background: transparent;
             color: var(--rf-text-soft);
-            font: 600 13px/38px -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1;
             letter-spacing: -0.005em;
+            font-variant-numeric: tabular-nums;
             transition: background 200ms ease, color 200ms ease, transform 140ms ease;
             border: 0;
             text-align: center;
             cursor: pointer;
-            padding: 0 12px;
+            padding: 0 4px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
             text-transform: none;
         }
         .bed-filter-tab:hover { color: var(--rf-text); background: rgba(255, 255, 255, 0.04); }
         .bed-filter-tab.active {
-            background: var(--rf-primary) !important;
+            background: transparent !important;
             color: var(--rf-on-primary) !important;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+            box-shadow: none;
         }
-        .bed-filter-tab:active { transform: scale(0.97); }
+        .bed-filter-tab:active { transform: none; }
 
         .floorplan-results { gap: 8px; padding-right: 2px; padding-bottom: 16px; }
+        .floorplan-results.is-transitioning .floorplan-card {
+            animation: renter-section-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+            animation-delay: calc(var(--item-index, 0) * 34ms);
+        }
         .floorplan-card {
             box-shadow: var(--rf-category-shadow);
             border: 0 !important;
@@ -2560,9 +2610,9 @@
             vertical-align: middle;
         }
         .floorplan-availability {
-            background: rgba(255, 255, 255, 0.10) !important;
-            color: var(--rf-text) !important;
-            border: 1px solid var(--rf-hairline) !important;
+            background: var(--rf-sage-soft) !important;
+            color: var(--rf-sage) !important;
+            border: 1px solid var(--rf-sage-ring) !important;
             padding: 4px 10px !important;
             font-size: 11.5px !important;
             font-weight: 600 !important;
@@ -2571,6 +2621,7 @@
             white-space: nowrap;
             width: fit-content;
             margin-top: 2px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
         }
 
         .renter-floorplan-status {
@@ -2624,6 +2675,36 @@
             background: rgba(255, 255, 255, 0.02);
             overflow: visible;
             flex-direction: initial !important;
+        }
+        .available-unit-list.is-transitioning .available-unit-card {
+            animation: renter-section-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+            animation-delay: calc(var(--item-index, 0) * 28ms);
+        }
+        .mobile-unit-actions.is-transitioning .mobile-unit-action {
+            animation: renter-section-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+            animation-delay: calc(var(--item-index, 0) * 40ms);
+        }
+        @keyframes renter-section-enter {
+            from {
+                opacity: 0;
+                transform: translateY(6px) scale(0.99);
+                filter: blur(1.5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .renter-floorplan-panel,
+            .bed-filter-tabs::before,
+            .floorplan-card,
+            .available-unit-card,
+            .mobile-unit-action {
+                transition: none !important;
+                animation: none !important;
+            }
         }
         .renter-floorplan-panel.collapsed .available-unit-list { display: grid; }
         .available-unit-card {
@@ -2680,16 +2761,16 @@
         .mobile-unit-actions {
             position: sticky;
             bottom: 0;
-            left: -18px; right: -18px;
-            margin: 0 -18px;
-            padding: 14px 18px calc(16px + env(safe-area-inset-bottom, 0px));
+            left: 0; right: 0;
+            margin: 0;
+            padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
-            gap: 8px;
-            background: linear-gradient(to top, var(--rf-surface) 75%, rgba(20, 22, 26, 0) 100%);
-            border-top: 1px solid var(--rf-hairline);
-            -webkit-backdrop-filter: blur(28px);
-            backdrop-filter: blur(28px);
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 6px;
+            background: transparent;
+            border-top: 0;
+            -webkit-backdrop-filter: none;
+            backdrop-filter: none;
             z-index: 2;
         }
         .renter-floorplan-panel:not(.collapsed) .mobile-unit-actions { display: none; }
@@ -2710,9 +2791,9 @@
                 "chevron title"
                 "list    list"
                 "actions actions";
-            row-gap: 14px;
+            row-gap: 10px;
             column-gap: 10px;
-            max-height: calc(72dvh - env(safe-area-inset-bottom, 0px));
+            max-height: calc(38dvh - env(safe-area-inset-bottom, 0px));
             min-height: 0;
         }
         .renter-floorplan-panel.collapsed .change-floorplan-button {
@@ -2765,12 +2846,12 @@
         }
 
         .mobile-unit-action {
-            min-height: 50px;
+            min-height: 34px;
             border-radius: var(--rf-radius-button);
             border: 0;
             background: var(--rf-secondary-bg);
             color: var(--rf-text);
-            font: 600 14.5px/1.1 -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+            font: 600 12.5px/1 -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
             letter-spacing: -0.012em;
             text-transform: none;
             box-shadow: inset 0 0 0 1px var(--rf-hairline);
@@ -2792,7 +2873,7 @@
         }
         .mobile-unit-action.apply:hover {
             background: var(--rf-primary-hover);
-            transform: translateY(-1px);
+            transform: none;
         }
         .mobile-unit-action:active { transform: translateY(0) scale(0.98); }
 
@@ -2875,8 +2956,8 @@
                 left: 12px;
                 width: auto;
                 max-width: none;
-                max-height: 60dvh;
-                padding: 14px 14px 0;
+                max-height: calc(38dvh - env(safe-area-inset-bottom, 0px));
+                padding: 10px 10px 0;
                 border-radius: var(--rf-radius-panel);
                 background: var(--rf-surface);
                 -webkit-backdrop-filter: blur(48px) saturate(180%);
@@ -2951,24 +3032,24 @@
             .mobile-unit-actions {
                 position: sticky !important;
                 top: auto !important;
-                left: -16px !important; right: -16px !important;
-                margin: 0 -16px !important;
-                padding: 14px 16px calc(16px + env(safe-area-inset-bottom, 0px)) !important;
-                background: linear-gradient(to top, var(--rf-surface) 75%, rgba(20, 22, 26, 0) 100%) !important;
-                border-top: 1px solid var(--rf-hairline) !important;
-                -webkit-backdrop-filter: blur(28px) !important;
-                backdrop-filter: blur(28px) !important;
+                left: 0 !important; right: 0 !important;
+                margin: 0 !important;
+                padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+                background: transparent !important;
+                border-top: 0 !important;
+                -webkit-backdrop-filter: none !important;
+                backdrop-filter: none !important;
                 z-index: 2 !important;
-                grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) !important;
-                gap: 8px !important;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+                gap: 6px !important;
             }
             .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .mobile-unit-actions {
                 display: grid !important;
             }
             .mobile-unit-action {
-                min-height: 50px !important;
-                border-radius: var(--rf-radius-button) !important;
-                font: 600 14.5px/1.1 -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif !important;
+                min-height: 34px !important;
+                border-radius: 999px !important;
+                font: 600 12.5px/1 -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif !important;
                 letter-spacing: -0.012em !important;
                 text-transform: none !important;
             }
@@ -3093,9 +3174,9 @@
             padding: 16px 22px calc(18px + env(safe-area-inset-bottom, 0px));
             display: flex;
             gap: 10px;
-            background: linear-gradient(to top, var(--rf-surface-strong) 70%, rgba(20, 24, 28, 0) 100%);
-            -webkit-backdrop-filter: blur(20px);
-            backdrop-filter: blur(20px);
+            background: transparent;
+            -webkit-backdrop-filter: none;
+            backdrop-filter: none;
             z-index: 3;
         }
         .apply-now-button {
@@ -3173,7 +3254,9 @@
                 color: var(--rf-text) !important;
                 background: var(--rf-secondary-bg) !important;
                 box-shadow: inset 0 0 0 1px var(--rf-hairline-strong) !important;
-                font: 600 14.5px/1.1 -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif !important;
+                min-height: 34px !important;
+                border-radius: 999px !important;
+                font: 600 12.5px/1 -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif !important;
             }
             .mobile-unit-action.apply {
                 color: var(--rf-on-primary) !important;
@@ -3207,7 +3290,7 @@
                 top: auto !important;
                 width: auto !important;
                 height: auto !important;
-                max-height: 36dvh !important;
+                max-height: 22dvh !important;
                 z-index: 1 !important;
                 padding: 8px !important;
                 border-radius: var(--rf-radius-card) !important;
@@ -3238,10 +3321,17 @@
             .mobile-unit-actions {
                 position: sticky !important;
                 bottom: 0 !important;
-                left: -16px !important;
-                right: -16px !important;
+                left: 0 !important;
+                right: 0 !important;
                 top: auto !important;
-                margin: 0 -16px !important;
+                margin: 0 !important;
+                padding: 5px 0 calc(5px + env(safe-area-inset-bottom, 0px)) !important;
+                gap: 6px !important;
+            }
+            .mobile-unit-action {
+                min-height: 34px !important;
+                border-radius: 999px !important;
+                font: 600 12.5px/1 -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif !important;
             }
             /* Pin the "needs selection" hint to the unit-list, not the viewport */
             .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list.needs-selection {
@@ -4061,6 +4151,10 @@
                 .filter(Number.isFinite)
         )).sort((a, b) => a - b);
 
+        const activeIndex = Math.max(0, bedCounts.findIndex((beds) => renterFloorplanState.selectedBeds === beds));
+        tabs.style.setProperty('--bed-tab-count', String(Math.max(1, bedCounts.length)));
+        tabs.style.setProperty('--bed-active-index', String(activeIndex));
+
         bedCounts.forEach((beds) => {
             const button = document.createElement('button');
             button.type = 'button';
@@ -4084,6 +4178,23 @@
             });
             tabs.appendChild(button);
         });
+    }
+
+    function animateSection(container, itemSelector) {
+        if (!container) return;
+        const nonce = String(Date.now() + Math.random());
+        container.dataset.transitionNonce = nonce;
+        Array.from(container.querySelectorAll(itemSelector)).forEach((item, index) => {
+            item.style.setProperty('--item-index', String(Math.min(index, 6)));
+        });
+        container.classList.remove('is-transitioning');
+        void container.offsetWidth;
+        container.classList.add('is-transitioning');
+        window.setTimeout(() => {
+            if (container.dataset.transitionNonce === nonce) {
+                container.classList.remove('is-transitioning');
+            }
+        }, 620);
     }
 
     async function waitForRoomOverlay() {
@@ -4205,6 +4316,8 @@
             results.appendChild(card);
         });
 
+        animateSection(results, '.floorplan-card');
+
         if (!plans.length) setRenterStatus('No floor plans match that bedroom count.');
     }
 
@@ -4248,6 +4361,8 @@
             });
             list.appendChild(card);
         });
+        animateSection(list, '.available-unit-card');
+        animateSection(document.getElementById('mobileUnitActions'), '.mobile-unit-action');
     }
 
     function resetFloorplanSelection() {
@@ -4299,6 +4414,8 @@
         const backdrop = document.getElementById('unitDetailBackdrop');
         const content = document.getElementById('unitDetailContent');
         if (!backdrop || !content) return;
+        const modal = content.closest('.unit-detail-modal');
+        modal?.querySelector('.unit-detail-actions')?.remove();
 
         content.innerHTML = '';
         const imageUrl = ApartmentUnitsData.getFloorplanImageUrl(plan.floorplan_image_path);
@@ -4355,7 +4472,7 @@
         apply.textContent = 'Apply Now';
         apply.addEventListener('click', () => setRenterStatus('Leasing application link coming soon.'));
         actions.appendChild(apply);
-        content.appendChild(actions);
+        (modal || content).appendChild(actions);
 
         backdrop.classList.add('active');
         fitMobileUnitDetailModal();

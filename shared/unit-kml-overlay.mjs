@@ -41,10 +41,12 @@ const NORMAL_FILL_COLOR = 0xff6b35;
 const SELECTED_FILL_COLOR = 0xffd047;
 const STACK_CUBE_COLOR = 0xffffff;
 const STACK_CUBE_OPACITY = 0;
-const SELECTED_STACK_CUBE_COLOR = 0xffffff;
+const SELECTED_STACK_CUBE_COLOR = 0x72f59b;
 const DEFAULT_SELECTED_STACK_CUBE_OPACITY = 0.42;
 const FOCUSED_STACK_SIBLING_OPACITY = 0.08;
-const FOCUSED_STACK_SIBLING_LABEL_OPACITY = 0.15;
+const FOCUSED_STACK_SIBLING_LABEL_OPACITY = 1;
+const STACK_UNIT_DOUBLE_TAP_MS = 420;
+const STACK_UNIT_DOUBLE_TAP_PX = 28;
 const DEFAULT_FLOOR_ROTATION_DEG = 0;
 const DEFAULT_FLOOR_FLIP_X = true;
 const PLAN_GIZMO_MOVE_COLOR = 0xffd047;
@@ -333,12 +335,12 @@ function makeStackCubeMesh(cornersXz, bottomY, topY, unitNumber, levelBase) {
   return mesh;
 }
 
-function makeUnitLabelSprite(text) {
+function makeUnitLabelTexture(text, { hover = false } = {}) {
   // Match the on-screen waypoint pill (`.tapdot-label-bubble`):
   //   - fully rounded ("border-radius: 9999px")
-  //   - translucent dark glass that mimics `rgba(255,255,255,0.25)` over a
-  //     `backdrop-filter: blur(20px)` (canvases can't backdrop-blur, so we
-  //     fake it with a dark base + a soft white wash)
+  //   - neutral glass surface matching `rgba(255,255,255,0.25)` over a
+  //     `backdrop-filter: blur(20px)`; canvases can't backdrop-blur, so keep
+  //     the texture neutral and fully opaque instead of tinting it sage
   //   - subtle diagonal highlight ring matching the CSS ::before gradient
   //   - white text in -apple-system / SF Pro / Helvetica Neue, weight 600
   const canvas = document.createElement('canvas');
@@ -353,11 +355,11 @@ function makeUnitLabelSprite(text) {
   const pillH = canvas.height - pillY * 2 + 0;
   const pillR = pillH / 2;
 
-  ctx.fillStyle = 'rgba(28, 30, 36, 0.62)';
+  ctx.fillStyle = 'rgba(34, 38, 44, 0.58)';
   roundRect(ctx, pillX, pillY, pillW, pillH, pillR);
   ctx.fill();
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.10)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
   roundRect(ctx, pillX, pillY, pillW, pillH, pillR);
   ctx.fill();
 
@@ -375,15 +377,37 @@ function makeUnitLabelSprite(text) {
   ctx.font = '600 36px -apple-system, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(String(text), canvas.width / 2, canvas.height / 2 + 1);
+  ctx.fillText(String(text), hover ? canvas.width / 2 - 18 : canvas.width / 2, canvas.height / 2 + 1);
 
-  const texture = new CanvasTexture(canvas);
+  if (hover) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.beginPath();
+    ctx.arc(canvas.width - 52, canvas.height / 2, 18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.94)';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(canvas.width - 58, canvas.height / 2 - 9);
+    ctx.lineTo(canvas.width - 48, canvas.height / 2);
+    ctx.lineTo(canvas.width - 58, canvas.height / 2 + 9);
+    ctx.stroke();
+  }
+
+  return new CanvasTexture(canvas);
+}
+
+function makeUnitLabelSprite(text) {
+  const texture = makeUnitLabelTexture(text);
+  const hoverTexture = makeUnitLabelTexture(text, { hover: true });
   const material = new SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false });
   const sprite = new Sprite(material);
   sprite.scale.set(0.16, 0.08, 1);
   sprite.renderOrder = 1400;
   sprite.userData.isFloorPlanCubeLabel = true;
   sprite.userData.texture = texture;
+  sprite.userData.hoverTexture = hoverTexture;
   return sprite;
 }
 
@@ -487,6 +511,8 @@ export function initRoomKmlOverlay({
     selectedStackUnit: null,
     selectedStackUnits: new Set(),
     focusedStackUnit: null,
+    hoveredStackUnit: null,
+    lastStackTap: null,
     selectedStackCubeOpacity: DEFAULT_SELECTED_STACK_CUBE_OPACITY,
     stackAsset: { version: 1, property: 'canyon-vista', levels: [] },
     planGizmoGroup: new Group(),
@@ -820,6 +846,7 @@ export function initRoomKmlOverlay({
       child.material?.map?.dispose?.();
       child.material?.dispose?.();
       child.userData?.texture?.dispose?.();
+      child.userData?.hoverTexture?.dispose?.();
     });
     state.stackGroup.clear();
   }
@@ -927,9 +954,23 @@ export function initRoomKmlOverlay({
         const dimmed = selected && hasFocusedUnit && state.focusedStackUnit !== unitNumber;
         child.visible = selected;
         child.material.opacity = selected ? (dimmed ? FOCUSED_STACK_SIBLING_LABEL_OPACITY : 1) : 0;
+        child.material.map = state.hoveredStackUnit === unitNumber
+          ? child.userData.hoverTexture
+          : child.userData.texture;
+        child.material.needsUpdate = true;
         child.renderOrder = dimmed ? 1390 : 1400;
       }
     });
+  }
+
+  function setHoveredStackUnit(unitNumber = null) {
+    const next = unitNumber == null ? null : String(unitNumber).trim();
+    const valid = next && state.selectedStackUnits.has(next) ? next : null;
+    if (state.hoveredStackUnit === valid) return state.hoveredStackUnit;
+    state.hoveredStackUnit = valid;
+    renderer.domElement.style.cursor = valid ? 'pointer' : '';
+    syncStackSelection();
+    return state.hoveredStackUnit;
   }
 
   function setFocusedStackUnit(unitNumber = null) {
@@ -1156,6 +1197,8 @@ export function initRoomKmlOverlay({
     state.selectedStackUnits = selected;
     state.selectedStackUnit = selected.size === 1 ? Array.from(selected)[0] : null;
     state.focusedStackUnit = null;
+    state.hoveredStackUnit = null;
+    state.lastStackTap = null;
     syncStackSelection();
     if (stackSearchInput) stackSearchInput.value = state.selectedStackUnit || '';
     renderStackSearchDropdown(false);
@@ -1464,6 +1507,9 @@ export function initRoomKmlOverlay({
     state.selectedStackUnit = null;
     state.selectedStackUnits = new Set();
     state.focusedStackUnit = null;
+    state.hoveredStackUnit = null;
+    state.lastStackTap = null;
+    renderer.domElement.style.cursor = '';
     if (stackSearchInput) stackSearchInput.value = '';
     disposeStackGroup();
     clearStackGizmo();
@@ -2056,16 +2102,46 @@ export function initRoomKmlOverlay({
     return selectRoom(unit, { syncInput: true, focus: false });
   }
 
-  function selectStackCubeFromPointer(event) {
-    if (!state.stackVisible || !state.stackAsset.levels.length) return false;
+  function detectSelectedStackUnitFromPointer(event) {
+    if (!state.stackVisible || !state.stackAsset.levels.length) return null;
     const objects = getStackSelectableObjects();
     setPointerNdc(event);
     state.raycaster.setFromCamera(state.ndc, camera);
     const hits = objects.length ? state.raycaster.intersectObjects(objects, false) : [];
-    const hitUnit = hits.find((hit) => state.selectedStackUnits.has(String(hit.object.userData.unitNumber)))?.object.userData.unitNumber;
-    const unit = hitUnit || pickSelectedStackUnitFromScreen(event);
-    if (!unit || !state.selectedStackUnits.has(String(unit))) return false;
-    if (typeof onStackUnitClick === 'function') onStackUnitClick(String(unit));
+    const hit = hits.find((entry) => state.selectedStackUnits.has(String(entry.object.userData.unitNumber)));
+    if (hit) {
+      return {
+        unit: String(hit.object.userData.unitNumber),
+        source: hit.object.userData?.isFloorPlanCubeLabel ? 'label' : 'volume',
+      };
+    }
+    return pickSelectedStackUnitFromScreen(event);
+  }
+
+  function selectStackCubeFromPointer(event) {
+    const hit = detectSelectedStackUnitFromPointer(event);
+    const unit = hit?.unit || null;
+    if (!unit || hit.source !== 'label') {
+      state.lastStackTap = null;
+      return false;
+    }
+    if (event.pointerType === 'mouse') {
+      state.lastStackTap = null;
+      if (typeof onStackUnitClick === 'function') onStackUnitClick(unit);
+      return true;
+    }
+    const now = performance.now();
+    const x = Number(event.clientX);
+    const y = Number(event.clientY);
+    const previous = state.lastStackTap;
+    state.lastStackTap = { unit, time: now, x, y };
+    const isDoubleTap = previous
+      && previous.unit === unit
+      && now - previous.time <= STACK_UNIT_DOUBLE_TAP_MS
+      && Math.hypot(x - previous.x, y - previous.y) <= STACK_UNIT_DOUBLE_TAP_PX;
+    if (!isDoubleTap) return false;
+    state.lastStackTap = null;
+    if (typeof onStackUnitClick === 'function') onStackUnitClick(unit);
     return true;
   }
 
@@ -2115,18 +2191,14 @@ export function initRoomKmlOverlay({
       if (!volume) return;
       const bounds = getProjectedStackVolumeBounds(volume, rect);
       if (!bounds) return;
-      const pad = 22;
-      const insideVolume = x >= bounds.minX - pad && x <= bounds.maxX + pad && y >= bounds.minY - pad && y <= bounds.maxY + pad;
       const labelDx = Math.abs(x - bounds.label.x);
       const labelDy = Math.abs(y - bounds.label.y);
       const insideLabel = bounds.label.inDepth && labelDx <= 72 && labelDy <= 34;
-      if (!insideVolume && !insideLabel) return;
-      const centerX = Math.min(Math.max(x, bounds.minX), bounds.maxX);
-      const centerY = Math.min(Math.max(y, bounds.minY), bounds.maxY);
-      const distance = Math.hypot(x - centerX, y - centerY) + (insideLabel ? 0 : 12);
-      if (!best || distance < best.distance) best = { unit: unitNumber, distance };
+      if (!insideLabel) return;
+      const distance = Math.hypot(labelDx, labelDy);
+      if (!best || distance < best.distance) best = { unit: unitNumber, source: 'label', distance };
     });
-    return best?.unit || null;
+    return best ? { unit: best.unit, source: best.source } : null;
   }
 
   function getVertexHandleScreenState(unit, vertexIndex = 0) {
@@ -2255,7 +2327,11 @@ export function initRoomKmlOverlay({
   }
 
   function handlePointerMove(event) {
-    if (!moveStackHeightDrag(event) && !movePlanGizmoDrag(event) && !moveVertexDrag(event)) return;
+    if (!moveStackHeightDrag(event) && !movePlanGizmoDrag(event) && !moveVertexDrag(event)) {
+      const hit = event.pointerType === 'mouse' ? detectSelectedStackUnitFromPointer(event) : null;
+      setHoveredStackUnit(hit?.source === 'label' ? hit.unit : null);
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
   }
