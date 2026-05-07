@@ -3238,6 +3238,50 @@
                 display: none !important;
             }
         }
+
+        /* ============================================================
+           3D drag pass-through. The renter floorplan panel covers a
+           large area of the viewport. To keep OrbitControls fully
+           usable, the panel SURFACE itself ignores pointer events so
+           drags / pinches / wheel always reach the 3D canvas
+           underneath. Only buttons, inputs, scrollable lists, and the
+           ::before frosted-glass border on the panel re-enable
+           pointer-events so taps & list scrolling still work.
+           ============================================================ */
+        .renter-floorplan-panel {
+            pointer-events: none !important;
+        }
+        .renter-floorplan-panel button,
+        .renter-floorplan-panel input,
+        .renter-floorplan-panel select,
+        .renter-floorplan-panel textarea,
+        .renter-floorplan-panel a[href],
+        .renter-floorplan-panel [role="button"],
+        .renter-floorplan-panel #floorplanResults,
+        .renter-floorplan-panel #availableUnitList,
+        .renter-floorplan-panel .floorplan-results,
+        .renter-floorplan-panel .available-unit-list,
+        .renter-floorplan-panel .bed-filter-tabs,
+        .renter-floorplan-panel .mobile-unit-actions {
+            pointer-events: auto;
+        }
+        /* In the full-screen mobile picker, the user is browsing
+           floorplans — the entire panel must capture taps so they can
+           scroll the list, not auto-rotate 3D in the background. */
+        .renter-floorplan-panel.mobile-selector-open {
+            pointer-events: auto !important;
+        }
+
+        /* Same pattern for the unit detail modal: when inactive it must
+           never block 3D drags; when active, the modal is the focus and
+           captures everything. The .active toggle already controls the
+           visibility, this keeps pointer-events aligned. */
+        .unit-detail-backdrop {
+            pointer-events: none !important;
+        }
+        .unit-detail-backdrop.active {
+            pointer-events: auto !important;
+        }
     </style>
 </head>
 <body>
