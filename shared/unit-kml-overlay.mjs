@@ -47,6 +47,10 @@ const FOCUSED_STACK_SIBLING_OPACITY = 0.08;
 const FOCUSED_STACK_SIBLING_LABEL_OPACITY = 1;
 const STACK_UNIT_DOUBLE_TAP_MS = 420;
 const STACK_UNIT_DOUBLE_TAP_PX = 28;
+const STACK_UNIT_LABEL_SCALE_X = 0.132;
+const STACK_UNIT_LABEL_HOVER_SCALE_X = 0.176;
+const STACK_UNIT_LABEL_SCALE_Y = 0.068;
+const STACK_UNIT_LABEL_SCALE_ANIMATION_MS = 180;
 const DEFAULT_FLOOR_ROTATION_DEG = 0;
 const DEFAULT_FLOOR_FLIP_X = true;
 const PLAN_GIZMO_MOVE_COLOR = 0xffd047;
@@ -349,49 +353,60 @@ function makeUnitLabelTexture(text, { hover = false } = {}) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const pillX = 14;
-  const pillY = 30;
+  const pillX = hover ? 16 : 38;
+  const pillY = 32;
   const pillW = canvas.width - pillX * 2;
-  const pillH = canvas.height - pillY * 2 + 0;
+  const pillH = canvas.height - pillY * 2;
   const pillR = pillH / 2;
 
-  ctx.fillStyle = 'rgba(34, 38, 44, 0.58)';
+  ctx.save();
+  ctx.shadowColor = 'rgba(255, 255, 255, 0.28)';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = 'rgba(238, 244, 242, 0.52)';
+  roundRect(ctx, pillX, pillY, pillW, pillH, pillR);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.filter = 'blur(10px)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.30)';
+  roundRect(ctx, pillX + 3, pillY + 3, pillW - 6, pillH - 6, pillR - 3);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = 'rgba(242, 247, 245, 0.38)';
   roundRect(ctx, pillX, pillY, pillW, pillH, pillR);
   ctx.fill();
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
   roundRect(ctx, pillX, pillY, pillW, pillH, pillR);
   ctx.fill();
 
   const borderGrad = ctx.createLinearGradient(pillX, pillY, pillX + pillW, pillY + pillH);
-  borderGrad.addColorStop(0, 'rgba(255, 255, 255, 0.46)');
+  borderGrad.addColorStop(0, 'rgba(255, 255, 255, 0.58)');
   borderGrad.addColorStop(0.41, 'rgba(255, 255, 255, 0)');
   borderGrad.addColorStop(0.57, 'rgba(255, 255, 255, 0)');
-  borderGrad.addColorStop(1, 'rgba(255, 255, 255, 0.46)');
+  borderGrad.addColorStop(1, 'rgba(255, 255, 255, 0.58)');
   ctx.strokeStyle = borderGrad;
   ctx.lineWidth = 2;
   roundRect(ctx, pillX + 1, pillY + 1, pillW - 2, pillH - 2, pillR - 1);
   ctx.stroke();
 
   ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
-  ctx.font = '600 36px -apple-system, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif';
+  ctx.font = '600 35px -apple-system, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(String(text), hover ? canvas.width / 2 - 18 : canvas.width / 2, canvas.height / 2 + 1);
+  ctx.fillText(String(text), hover ? canvas.width / 2 - 20 : canvas.width / 2, canvas.height / 2 + 1);
 
   if (hover) {
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-    ctx.beginPath();
-    ctx.arc(canvas.width - 52, canvas.height / 2, 18, 0, Math.PI * 2);
-    ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.94)';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
-    ctx.moveTo(canvas.width - 58, canvas.height / 2 - 9);
-    ctx.lineTo(canvas.width - 48, canvas.height / 2);
-    ctx.lineTo(canvas.width - 58, canvas.height / 2 + 9);
+    ctx.moveTo(canvas.width - 64, canvas.height / 2 - 11);
+    ctx.lineTo(canvas.width - 50, canvas.height / 2);
+    ctx.lineTo(canvas.width - 64, canvas.height / 2 + 11);
     ctx.stroke();
   }
 
@@ -403,11 +418,14 @@ function makeUnitLabelSprite(text) {
   const hoverTexture = makeUnitLabelTexture(text, { hover: true });
   const material = new SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false });
   const sprite = new Sprite(material);
-  sprite.scale.set(0.16, 0.08, 1);
+  sprite.scale.set(STACK_UNIT_LABEL_SCALE_X, STACK_UNIT_LABEL_SCALE_Y, 1);
   sprite.renderOrder = 1400;
   sprite.userData.isFloorPlanCubeLabel = true;
   sprite.userData.texture = texture;
   sprite.userData.hoverTexture = hoverTexture;
+  sprite.userData.baseScaleX = STACK_UNIT_LABEL_SCALE_X;
+  sprite.userData.hoverScaleX = STACK_UNIT_LABEL_HOVER_SCALE_X;
+  sprite.userData.targetScaleX = STACK_UNIT_LABEL_SCALE_X;
   return sprite;
 }
 
@@ -512,6 +530,7 @@ export function initRoomKmlOverlay({
     selectedStackUnits: new Set(),
     focusedStackUnit: null,
     hoveredStackUnit: null,
+    stackLabelScaleRaf: 0,
     lastStackTap: null,
     selectedStackCubeOpacity: DEFAULT_SELECTED_STACK_CUBE_OPACITY,
     stackAsset: { version: 1, property: 'canyon-vista', levels: [] },
@@ -957,10 +976,41 @@ export function initRoomKmlOverlay({
         child.material.map = state.hoveredStackUnit === unitNumber
           ? child.userData.hoverTexture
           : child.userData.texture;
+        child.userData.targetScaleX = state.hoveredStackUnit === unitNumber
+          ? child.userData.hoverScaleX
+          : child.userData.baseScaleX;
         child.material.needsUpdate = true;
         child.renderOrder = dimmed ? 1390 : 1400;
       }
     });
+  }
+
+  function animateStackLabelScales(startedAt = performance.now()) {
+    if (state.stackLabelScaleRaf) cancelAnimationFrame(state.stackLabelScaleRaf);
+    const step = (now) => {
+      const progress = Math.min(Math.max((now - startedAt) / STACK_UNIT_LABEL_SCALE_ANIMATION_MS, 0), 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      let needsNextFrame = false;
+      state.stackGroup.traverse((child) => {
+        if (!child.isSprite || !child.userData?.isFloorPlanCubeLabel) return;
+        const targetScaleX = Number(child.userData.targetScaleX) || STACK_UNIT_LABEL_SCALE_X;
+        const currentScaleX = Number(child.scale.x) || STACK_UNIT_LABEL_SCALE_X;
+        const nextScaleX = currentScaleX + (targetScaleX - currentScaleX) * eased;
+        child.scale.set(nextScaleX, STACK_UNIT_LABEL_SCALE_Y, 1);
+        if (Math.abs(targetScaleX - nextScaleX) > 0.0005) needsNextFrame = true;
+      });
+      if (needsNextFrame && progress < 1) {
+        state.stackLabelScaleRaf = requestAnimationFrame(step);
+        return;
+      }
+      state.stackGroup.traverse((child) => {
+        if (!child.isSprite || !child.userData?.isFloorPlanCubeLabel) return;
+        const targetScaleX = Number(child.userData.targetScaleX) || STACK_UNIT_LABEL_SCALE_X;
+        child.scale.set(targetScaleX, STACK_UNIT_LABEL_SCALE_Y, 1);
+      });
+      state.stackLabelScaleRaf = 0;
+    };
+    state.stackLabelScaleRaf = requestAnimationFrame(step);
   }
 
   function setHoveredStackUnit(unitNumber = null) {
@@ -970,6 +1020,7 @@ export function initRoomKmlOverlay({
     state.hoveredStackUnit = valid;
     renderer.domElement.style.cursor = valid ? 'pointer' : '';
     syncStackSelection();
+    animateStackLabelScales();
     return state.hoveredStackUnit;
   }
 
@@ -2635,6 +2686,10 @@ export function initRoomKmlOverlay({
     },
     orbitSelectedRoomForVerification,
     dispose() {
+      if (state.stackLabelScaleRaf) {
+        cancelAnimationFrame(state.stackLabelScaleRaf);
+        state.stackLabelScaleRaf = 0;
+      }
       renderer.domElement.removeEventListener('pointerdown', handlePointerDown, { capture: true });
       renderer.domElement.removeEventListener('pointermove', handlePointerMove, { capture: true });
       renderer.domElement.removeEventListener('pointerup', handlePointerUp, { capture: true });
