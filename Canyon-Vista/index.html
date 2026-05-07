@@ -2379,6 +2379,586 @@
                 bottom: 12px;
             }
         }
+
+        /* ==========================================================
+           Floor-plan UI refresh — visionOS / Linear / iOS
+           Unified dark glass surface with sticky base action bar.
+           Appended overrides; original rules above kept for fallback.
+           ========================================================== */
+        :root {
+            --rf-surface: rgba(20, 24, 28, 0.62);
+            --rf-surface-strong: rgba(20, 24, 28, 0.78);
+            --rf-hairline: rgba(255, 255, 255, 0.10);
+            --rf-hairline-strong: rgba(255, 255, 255, 0.16);
+            --rf-text: rgba(255, 255, 255, 0.96);
+            --rf-text-muted: rgba(255, 255, 255, 0.60);
+            --rf-text-soft: rgba(255, 255, 255, 0.74);
+            --rf-primary: #72f59b;
+            --rf-primary-hover: #8bf7ad;
+            --rf-on-primary: #0d2519;
+            --rf-secondary-bg: rgba(255, 255, 255, 0.10);
+            --rf-secondary-bg-hover: rgba(255, 255, 255, 0.16);
+            --rf-radius-panel: 26px;
+            --rf-radius-card: 18px;
+            --rf-radius-button: 16px;
+            --rf-shadow-panel: 0 24px 60px rgba(0, 0, 0, 0.42), 0 2px 0 rgba(255, 255, 255, 0.06) inset;
+        }
+
+        .renter-floorplan-panel {
+            border-radius: var(--rf-radius-panel);
+            background: var(--rf-surface);
+            -webkit-backdrop-filter: blur(48px) saturate(180%);
+            backdrop-filter: blur(48px) saturate(180%);
+            box-shadow: var(--rf-shadow-panel);
+            color: var(--rf-text);
+            padding: 16px 16px 0;
+            gap: 14px;
+            font-family: "Helvetica Neue", -apple-system, BlinkMacSystemFont, "SF Pro Display", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .renter-floorplan-panel::before {
+            border-radius: inherit;
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0) 62%, rgba(255, 255, 255, 0.18) 100%);
+            padding: 1px;
+        }
+        .renter-floorplan-title h1 {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+        .renter-floorplan-count {
+            font-size: 12px;
+            color: var(--rf-text-muted);
+            font-weight: 500;
+            letter-spacing: 0;
+        }
+        .bed-filter-tabs { gap: 6px; }
+        .bed-filter-tab {
+            height: 32px;
+            border-radius: var(--rf-radius-button);
+            background: var(--rf-secondary-bg);
+            color: var(--rf-text);
+            font: 600 12.5px/32px "Helvetica Neue", Arial, sans-serif;
+            letter-spacing: -0.005em;
+            transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+        }
+        .bed-filter-tab:hover { background: var(--rf-secondary-bg-hover); }
+        .bed-filter-tab.active {
+            background: var(--rf-primary);
+            color: var(--rf-on-primary);
+            box-shadow: 0 6px 18px rgba(114, 245, 155, 0.28);
+        }
+
+        .floorplan-results { gap: 8px; padding-right: 4px; padding-bottom: 16px; }
+        .floorplan-card {
+            border-radius: var(--rf-radius-card);
+            border: 1px solid var(--rf-hairline);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            gap: 12px;
+            transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+        }
+        .floorplan-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--rf-hairline-strong);
+        }
+        .floorplan-card.active {
+            background: rgba(114, 245, 155, 0.12);
+            border-color: rgba(114, 245, 155, 0.55);
+            box-shadow: 0 0 0 1px rgba(114, 245, 155, 0.35) inset;
+        }
+        .floorplan-thumb {
+            width: 84px; height: 72px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.92);
+        }
+        .floorplan-thumb-placeholder { font-size: 10.5px; }
+        .floorplan-name {
+            font-size: 14.5px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+        .floorplan-meta {
+            font-size: 11.5px;
+            color: var(--rf-text-soft);
+            font-weight: 500;
+            gap: 6px;
+        }
+        .floorplan-availability {
+            background: rgba(114, 245, 155, 0.18);
+            color: #a4f9bd;
+            border: 1px solid rgba(114, 245, 155, 0.32);
+            padding: 3px 8px;
+            font-weight: 600;
+            letter-spacing: -0.005em;
+        }
+
+        .renter-floorplan-status {
+            color: var(--rf-text-muted);
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 14px;
+        }
+
+        /* Selected-floorplan summary header (replaces the lone change-floorplan pill) */
+        .change-floorplan-button {
+            min-height: 30px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: var(--rf-secondary-bg);
+            color: var(--rf-text);
+            border: 1px solid var(--rf-hairline);
+            font: 600 11.5px/30px "Helvetica Neue", Arial, sans-serif;
+            letter-spacing: -0.005em;
+            transition: background 160ms ease, border-color 160ms ease;
+        }
+        .change-floorplan-button:hover {
+            background: var(--rf-secondary-bg-hover);
+            border-color: var(--rf-hairline-strong);
+        }
+
+        /* Unit chip grid — replaces the cramped vertical pill stack */
+        .available-unit-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+            gap: 6px;
+            padding: 0 4px 8px 0;
+            margin-bottom: 0;
+        }
+        .renter-floorplan-panel.collapsed .available-unit-list { display: grid; }
+        .available-unit-card {
+            min-height: 44px;
+            border-radius: 12px;
+            border: 1px solid var(--rf-hairline);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 1px;
+            transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+        }
+        .available-unit-card:hover {
+            background: rgba(255, 255, 255, 0.10);
+            border-color: var(--rf-hairline-strong);
+        }
+        .available-unit-card.active {
+            background: rgba(114, 245, 155, 0.18);
+            border-color: rgba(114, 245, 155, 0.6);
+            box-shadow: 0 0 0 1px rgba(114, 245, 155, 0.4) inset;
+        }
+        .available-unit-card.active .available-unit-number,
+        .available-unit-card.active .available-unit-price {
+            color: #f0fff5;
+        }
+        .available-unit-number {
+            min-width: 0; min-height: 0;
+            background: transparent;
+            box-shadow: none;
+            padding: 0;
+            border-radius: 0;
+            font: 600 14px/1 "Helvetica Neue", Arial, sans-serif;
+            letter-spacing: -0.01em;
+            color: var(--rf-text);
+            justify-content: flex-start;
+        }
+        .available-unit-price {
+            font-size: 10.5px;
+            font-weight: 600;
+            color: var(--rf-text-muted);
+        }
+
+        /* Sticky base action bar — visionOS pattern: actions live at the base of the surface */
+        .mobile-unit-actions {
+            position: sticky;
+            bottom: 0;
+            left: -16px; right: -16px;
+            margin: 0 -16px;
+            padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+            gap: 10px;
+            background:
+                linear-gradient(to top, var(--rf-surface) 70%, rgba(20, 24, 28, 0) 100%);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            z-index: 2;
+        }
+        .renter-floorplan-panel:not(.collapsed) .mobile-unit-actions { display: none; }
+        .renter-floorplan-panel.collapsed .mobile-unit-actions { display: grid; }
+        /* Hide the floorplan grid when a plan is selected */
+        .renter-floorplan-panel.collapsed .floorplan-results,
+        .renter-floorplan-panel.collapsed .bed-filter-tabs,
+        .renter-floorplan-panel.collapsed .renter-floorplan-count {
+            display: none;
+        }
+        .renter-floorplan-panel.collapsed .renter-floorplan-title {
+            justify-content: flex-start;
+        }
+        .renter-floorplan-panel.collapsed .renter-floorplan-title h1 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--rf-text-muted);
+            letter-spacing: -0.005em;
+        }
+
+        .mobile-unit-action {
+            min-height: 50px;
+            border-radius: var(--rf-radius-button);
+            border: 1px solid transparent;
+            background: var(--rf-secondary-bg);
+            color: var(--rf-text);
+            font: 600 14px/1.1 "Helvetica Neue", Arial, sans-serif;
+            letter-spacing: -0.01em;
+            text-transform: none;
+            box-shadow: none;
+            transition: background 160ms ease, transform 120ms ease, box-shadow 200ms ease;
+        }
+        .mobile-unit-action.details {
+            background: var(--rf-secondary-bg);
+            color: var(--rf-text);
+            border-color: var(--rf-hairline-strong);
+        }
+        .mobile-unit-action.details:hover { background: var(--rf-secondary-bg-hover); }
+        .mobile-unit-action.apply {
+            background: var(--rf-primary);
+            color: var(--rf-on-primary);
+            box-shadow: 0 10px 28px rgba(114, 245, 155, 0.32), 0 1px 0 rgba(255, 255, 255, 0.42) inset;
+        }
+        .mobile-unit-action.apply:hover {
+            background: var(--rf-primary-hover);
+            transform: translateY(-1px);
+        }
+        .mobile-unit-action:active { transform: translateY(0); }
+
+        .mobile-availability-button {
+            background: var(--rf-primary);
+            color: var(--rf-on-primary);
+            border-radius: 999px;
+            min-height: 50px;
+            font: 600 14.5px/50px "Helvetica Neue", Arial, sans-serif;
+            letter-spacing: -0.01em;
+            text-transform: none;
+            box-shadow: 0 14px 32px rgba(114, 245, 155, 0.34), 0 1px 0 rgba(255, 255, 255, 0.4) inset;
+        }
+        .mobile-availability-button:hover { background: var(--rf-primary-hover); }
+
+        .renter-floorplan-panel .mobile-floorplan-close {
+            width: 36px !important; height: 36px !important;
+            border-radius: 999px !important;
+            background: rgba(20, 24, 28, 0.78) !important;
+            border: 1px solid var(--rf-hairline-strong) !important;
+            color: var(--rf-text) !important;
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            font-size: 0 !important;
+            line-height: 0 !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: none !important;
+        }
+        .renter-floorplan-panel:not(.mobile-selector-open) .mobile-floorplan-close {
+            display: none !important;
+        }
+        .renter-floorplan-panel.mobile-selector-open .mobile-floorplan-close {
+            display: inline-flex !important;
+        }
+        .renter-floorplan-panel .mobile-floorplan-close::before,
+        .mobile-floorplan-close::before {
+            content: "";
+            display: block;
+            width: 14px;
+            height: 14px;
+            background-color: currentColor;
+            -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'><path d='M6 6l12 12M6 18L18 6'/></svg>") center/contain no-repeat;
+            mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'><path d='M6 6l12 12M6 18L18 6'/></svg>") center/contain no-repeat;
+        }
+
+        /* Override the @media block to keep our chip grid + sticky bar even on mobile collapsed */
+        @media (max-width: 720px) {
+            .renter-floorplan-panel {
+                padding: 14px 14px 0;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) {
+                inset: auto auto 12px 12px;
+                top: auto;
+                right: 12px;
+                left: 12px;
+                width: auto;
+                max-width: none;
+                max-height: 60dvh;
+                padding: 14px 14px 0;
+                border-radius: var(--rf-radius-panel);
+                background: var(--rf-surface);
+                -webkit-backdrop-filter: blur(48px) saturate(180%);
+                backdrop-filter: blur(48px) saturate(180%);
+                box-shadow: var(--rf-shadow-panel);
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open)::before {
+                display: block;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) > :not(.mobile-availability-button) {
+                display: revert !important;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) > .mobile-availability-button {
+                display: none !important;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .floorplan-results,
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .bed-filter-tabs,
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .renter-floorplan-count {
+                display: none !important;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list {
+                display: grid !important;
+                grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)) !important;
+                grid-auto-flow: row !important;
+                grid-auto-columns: initial !important;
+                grid-template-rows: initial !important;
+                overflow-x: visible !important;
+                overflow-y: auto;
+                gap: 6px !important;
+                padding: 0 0 8px;
+                max-height: none;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list::after,
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list::before {
+                display: none !important;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-card {
+                min-height: 44px !important;
+                padding: 6px 8px !important;
+                border-radius: 12px !important;
+                background: rgba(255, 255, 255, 0.05) !important;
+                box-shadow: none !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                justify-content: center !important;
+                gap: 1px !important;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-card.active {
+                background: rgba(114, 245, 155, 0.18) !important;
+                border-color: rgba(114, 245, 155, 0.6) !important;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-number {
+                min-width: 0 !important;
+                min-height: 0 !important;
+                font: 600 14px/1 "Helvetica Neue", Arial, sans-serif !important;
+                color: var(--rf-text) !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-price {
+                display: block !important;
+                color: var(--rf-text-muted);
+                font-size: 10.5px;
+                font-weight: 600;
+            }
+            /* Sticky action bar lives inside the panel, not floating in the viewport */
+            .mobile-unit-actions {
+                position: sticky !important;
+                top: auto !important;
+                left: -14px !important; right: -14px !important;
+                margin: 0 -14px !important;
+                padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+                background: linear-gradient(to top, var(--rf-surface) 75%, rgba(20, 24, 28, 0) 100%) !important;
+                -webkit-backdrop-filter: blur(20px) !important;
+                backdrop-filter: blur(20px) !important;
+                z-index: 2 !important;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) !important;
+                gap: 10px !important;
+            }
+            .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .mobile-unit-actions {
+                display: grid !important;
+            }
+            .mobile-unit-action {
+                min-height: 50px !important;
+                border-radius: var(--rf-radius-button) !important;
+                font: 600 14px/1.1 "Helvetica Neue", Arial, sans-serif !important;
+                letter-spacing: -0.01em !important;
+                text-transform: none !important;
+                box-shadow: none !important;
+            }
+            .mobile-unit-action.details {
+                background: var(--rf-secondary-bg) !important;
+                color: var(--rf-text) !important;
+                border: 1px solid var(--rf-hairline-strong) !important;
+            }
+            .mobile-unit-action.apply {
+                background: var(--rf-primary) !important;
+                color: var(--rf-on-primary) !important;
+                box-shadow: 0 10px 28px rgba(114, 245, 155, 0.32), 0 1px 0 rgba(255, 255, 255, 0.42) inset !important;
+            }
+        }
+
+        /* Unit detail modal — dark glass + sticky base footer */
+        .unit-detail-modal {
+            border-radius: var(--rf-radius-panel);
+            border: 1px solid var(--rf-hairline);
+            background: var(--rf-surface-strong);
+            -webkit-backdrop-filter: blur(48px) saturate(180%);
+            backdrop-filter: blur(48px) saturate(180%);
+            color: var(--rf-text);
+            box-shadow: var(--rf-shadow-panel);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .unit-detail-modal::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0) 62%, rgba(255, 255, 255, 0.14) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            padding: 1px;
+        }
+        .unit-detail-content {
+            position: relative;
+            z-index: 1;
+            padding: 22px 22px 110px;
+            color: var(--rf-text);
+            overflow-y: auto;
+            flex: 1 1 auto;
+        }
+        .unit-detail-image {
+            display: block;
+            width: 100%;
+            max-height: 240px;
+            margin: 0 auto 20px;
+            object-fit: contain;
+            background: rgba(255, 255, 255, 0.94);
+            border-radius: 16px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .unit-detail-header { gap: 6px; margin-bottom: 14px; }
+        .unit-detail-title {
+            color: var(--rf-text);
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.015em;
+        }
+        .unit-detail-price {
+            color: var(--rf-text-soft);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: -0.005em;
+        }
+        .unit-detail-stats {
+            color: var(--rf-text-muted);
+            font-size: 13px;
+            font-weight: 500;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+        .unit-detail-features-title {
+            color: var(--rf-text);
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: -0.005em;
+            margin: 0 0 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--rf-text-muted);
+            font-size: 11px;
+        }
+        .unit-detail-features {
+            list-style: none;
+            padding-left: 0;
+            margin: 0 0 12px;
+            color: var(--rf-text-soft);
+            font-size: 13.5px;
+            line-height: 1.6;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4px;
+        }
+        .unit-detail-features li {
+            position: relative;
+            padding-left: 18px;
+        }
+        .unit-detail-features li::before {
+            content: "";
+            position: absolute;
+            left: 4px; top: 0.62em;
+            width: 5px; height: 5px;
+            border-radius: 999px;
+            background: rgba(114, 245, 155, 0.7);
+        }
+        /* Sticky footer with action button(s) */
+        .unit-detail-actions {
+            position: absolute;
+            left: 0; right: 0; bottom: 0;
+            margin: 0;
+            padding: 16px 22px calc(18px + env(safe-area-inset-bottom, 0px));
+            display: flex;
+            gap: 10px;
+            background: linear-gradient(to top, var(--rf-surface-strong) 70%, rgba(20, 24, 28, 0) 100%);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            z-index: 3;
+        }
+        .apply-now-button {
+            flex: 1 1 auto;
+            min-height: 50px;
+            border-radius: var(--rf-radius-button);
+            background: var(--rf-primary);
+            color: var(--rf-on-primary);
+            font: 600 14.5px/50px "Helvetica Neue", Arial, sans-serif;
+            letter-spacing: -0.01em;
+            text-transform: none;
+            padding: 0 24px;
+            box-shadow: 0 12px 32px rgba(114, 245, 155, 0.34), 0 1px 0 rgba(255, 255, 255, 0.42) inset;
+            transition: background 160ms ease, transform 120ms ease;
+        }
+        .apply-now-button:hover {
+            background: var(--rf-primary-hover);
+            transform: translateY(-1px);
+        }
+        .unit-detail-close {
+            width: 36px !important; height: 36px !important;
+            border-radius: 999px !important;
+            background: rgba(20, 24, 28, 0.78) !important;
+            border: 1px solid var(--rf-hairline-strong) !important;
+            color: var(--rf-text) !important;
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 0 !important;
+            line-height: 0 !important;
+            top: 14px;
+            right: 14px;
+            margin: 0;
+            position: absolute;
+            z-index: 4;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32);
+        }
+        .unit-detail-close::before {
+            content: "";
+            display: block;
+            width: 14px; height: 14px;
+            background-color: currentColor;
+            -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'><path d='M6 6l12 12M6 18L18 6'/></svg>") center/contain no-repeat;
+            mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'><path d='M6 6l12 12M6 18L18 6'/></svg>") center/contain no-repeat;
+        }
+        @media (max-width: 720px) {
+            .unit-detail-modal { border-radius: var(--rf-radius-panel); }
+            .unit-detail-content { padding: 22px 22px 120px; height: auto; overflow-y: auto; }
+            .unit-detail-actions { padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+            .unit-detail-image { max-height: calc(220px * var(--unit-detail-scale, 1)); }
+        }
     </style>
 </head>
 <body>
@@ -2423,7 +3003,7 @@
 
     <section id="renterFloorplanPanel" class="renter-floorplan-panel" aria-live="polite">
         <button id="mobileAvailabilityButton" class="mobile-availability-button" type="button">see available units</button>
-        <button id="mobileFloorplanClose" class="mobile-floorplan-close" type="button" aria-label="Close floorplan selector">x</button>
+        <button id="mobileFloorplanClose" class="mobile-floorplan-close" type="button" aria-label="Close floorplan selector"></button>
         <div class="renter-floorplan-title">
             <h1>Find your floorplan</h1>
             <div id="renterFloorplanCount" class="renter-floorplan-count">Loading</div>
@@ -2433,7 +3013,7 @@
         <button id="changeFloorplanButton" class="change-floorplan-button" type="button">Select a different floorplan</button>
         <div id="availableUnitList" class="available-unit-list"></div>
         <div id="mobileUnitActions" class="mobile-unit-actions">
-            <button id="mobileSeeDetailsButton" class="mobile-unit-action details" type="button">See Details</button>
+            <button id="mobileSeeDetailsButton" class="mobile-unit-action details" type="button">View Details</button>
             <button id="mobileApplyNowButton" class="mobile-unit-action apply" type="button">Apply Now</button>
         </div>
         <div id="renterFloorplanStatus" class="renter-floorplan-status">Choose a bedroom count.</div>
@@ -2441,7 +3021,7 @@
 
     <aside id="unitDetailBackdrop" class="unit-detail-backdrop" aria-labelledby="unitDetailTitle">
         <div class="unit-detail-modal">
-            <button id="unitDetailClose" class="unit-detail-close" type="button" aria-label="Close unit details">x</button>
+            <button id="unitDetailClose" class="unit-detail-close" type="button" aria-label="Close unit details"></button>
             <div id="unitDetailContent" class="unit-detail-content"></div>
         </div>
     </aside>
