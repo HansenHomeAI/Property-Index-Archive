@@ -2156,12 +2156,24 @@
                 border: 1px solid rgba(255, 255, 255, 0.42);
                 overflow: hidden;
                 box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+            .unit-detail-body {
+                flex: 1 1 auto;
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
             }
             .unit-detail-content {
                 --unit-detail-scale: 1;
-                height: calc(100% - 12px);
-                padding: 18px 20px 16px;
-                overflow: hidden;
+                flex: 1 1 auto;
+                min-height: 0;
+                overflow-x: hidden;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 18px 20px;
             }
             .unit-detail-image {
                 max-height: calc(214px * var(--unit-detail-scale));
@@ -2193,6 +2205,7 @@
                 line-height: 1.28;
             }
             .unit-detail-actions {
+                flex: 0 0 auto;
                 margin-bottom: 0;
             }
             .apply-now-button {
@@ -2461,28 +2474,24 @@
             gap: 6px;
             background: rgba(255, 255, 255, 0.02);
             display: flex;
-            /* stretch: every segment gets the same height (avoids "floating" 1 Bed / 2 Bed) */
-            align-items: stretch;
+            align-items: center;
             overflow: hidden;
         }
         .bed-filter-tab {
             flex: 1 1 0;
             min-width: 0;
             min-height: 44px;
+            height: auto;
             border-radius: 999px;
             background: transparent;
             color: var(--rf-text-soft);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            line-height: 1;
+            font: 600 13px/1.22 -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
             letter-spacing: -0.005em;
-            font-variant-numeric: tabular-nums;
             transition: background 200ms ease, color 200ms ease, transform 140ms ease;
             border: 0;
             text-align: center;
             cursor: pointer;
-            padding: 0 12px;
+            padding: 10px 12px;
             box-sizing: border-box;
             display: flex;
             align-items: center;
@@ -2493,8 +2502,7 @@
         .bed-filter-tab.active {
             background: var(--rf-primary) !important;
             color: var(--rf-on-primary) !important;
-            /* Symmetric inner highlight — top-only inset made middle tabs look bottom-shifted vs track */
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.38);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
         }
         .bed-filter-tab:active { transform: scale(0.97); }
 
@@ -3010,7 +3018,6 @@
             flex-direction: column;
             position: relative;
             min-height: 0;
-            height: 100%;
         }
         .unit-detail-modal::before {
             content: "";
@@ -3025,30 +3032,27 @@
             mask-composite: exclude;
             padding: 1px;
         }
-        /* Scrolls independently; Apply Now lives in .unit-detail-footer below */
+        /* Split scroll (body list) vs fixed footer (Apply) — avoids absolute-footer
+           bug where CTA aligns to viewport not document and obscures scrolled text. */
+        .unit-detail-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
         .unit-detail-content {
             position: relative;
             z-index: 1;
-            padding: 22px;
-            padding-bottom: 28px;
+            padding: 22px 22px 26px;
             color: var(--rf-text);
             overflow-x: hidden;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            flex: 1 1 0;
+            flex: 1 1 auto;
             min-height: 0;
-        }
-        .unit-detail-footer {
-            flex: 0 0 auto;
-            position: relative;
-            z-index: 3;
-            border-top: 1px solid var(--rf-hairline);
-            background: var(--rf-surface-strong);
-            -webkit-backdrop-filter: blur(28px);
-            backdrop-filter: blur(28px);
-        }
-        .unit-detail-footer:empty {
-            display: none;
         }
         .unit-detail-image {
             display: block;
@@ -3115,14 +3119,24 @@
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.62);
         }
-        /* Action row — pinned by flex layout (.unit-detail-footer), not position:absolute */
+        /* Footer lives outside scrolling region (.unit-detail-content) — no overlay. */
         .unit-detail-actions {
-            position: static;
+            flex: 0 0 auto;
+            position: relative;
+            left: auto;
+            right: auto;
+            bottom: auto;
             margin: 0;
-            padding: 16px 22px calc(18px + env(safe-area-inset-bottom, 0px));
+            padding: 14px 22px calc(18px + env(safe-area-inset-bottom, 0px));
             display: flex;
             gap: 10px;
-            background: transparent;
+            border-top: 1px solid var(--rf-hairline);
+            background: var(--rf-surface-strong);
+            box-shadow: 0 -10px 32px rgba(0, 0, 0, 0.18);
+            z-index: 2;
+        }
+        .unit-detail-actions:empty {
+            display: none;
         }
         .apply-now-button {
             flex: 1 1 auto;
@@ -3172,14 +3186,9 @@
         }
         @media (max-width: 720px) {
             .unit-detail-modal { border-radius: var(--rf-radius-panel); }
-            .unit-detail-content {
-                padding: 22px 22px 24px;
-                flex: 1 1 0;
-                min-height: 0;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            .unit-detail-actions { padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+            .unit-detail-body { flex: 1 1 auto; min-height: 0; }
+            .unit-detail-content { padding: 22px 22px 20px; overflow-y: auto; }
+            .unit-detail-actions { padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
             .unit-detail-image { max-height: calc(220px * var(--unit-detail-scale, 1)); }
         }
 
@@ -3375,8 +3384,10 @@
     <aside id="unitDetailBackdrop" class="unit-detail-backdrop" aria-labelledby="unitDetailTitle">
         <div class="unit-detail-modal">
             <button id="unitDetailClose" class="unit-detail-close" type="button" aria-label="Close unit details"></button>
-            <div id="unitDetailContent" class="unit-detail-content"></div>
-            <footer id="unitDetailFooter" class="unit-detail-footer"></footer>
+            <div class="unit-detail-body">
+                <div id="unitDetailContent" class="unit-detail-content"></div>
+                <footer id="unitDetailFooter" class="unit-detail-actions" aria-label="Lease actions"></footer>
+            </div>
         </div>
     </aside>
 
@@ -3879,8 +3890,14 @@
         if (!isMobileRenterLayout()) return;
         const content = document.getElementById('unitDetailContent');
         if (!content) return;
-        /* Scroll area is constrained by flex; keep scale uniform (no shrinking). */
         content.style.setProperty('--unit-detail-scale', '1');
+        requestAnimationFrame(() => {
+            const availableHeight = content.clientHeight;
+            const neededHeight = content.scrollHeight;
+            if (!availableHeight || !neededHeight || neededHeight <= availableHeight) return;
+            const scale = Math.max(0.72, Math.min(1, availableHeight / neededHeight));
+            content.style.setProperty('--unit-detail-scale', scale.toFixed(3));
+        });
     }
 
     function setHighlightOpacity(value) {
@@ -4299,11 +4316,11 @@
 
         const backdrop = document.getElementById('unitDetailBackdrop');
         const content = document.getElementById('unitDetailContent');
-        const footer = document.getElementById('unitDetailFooter');
         if (!backdrop || !content) return;
 
-        content.replaceChildren();
-        footer?.replaceChildren();
+        content.innerHTML = '';
+        const footer = document.getElementById('unitDetailFooter');
+        if (footer) footer.innerHTML = '';
         const imageUrl = ApartmentUnitsData.getFloorplanImageUrl(plan.floorplan_image_path);
         if (imageUrl) {
             const image = document.createElement('img');
@@ -4350,17 +4367,17 @@
         });
         content.appendChild(features);
 
-        const actions = document.createElement('div');
-        actions.className = 'unit-detail-actions';
         const apply = document.createElement('button');
         apply.type = 'button';
         apply.className = 'apply-now-button';
         apply.textContent = 'Apply Now';
         apply.addEventListener('click', () => setRenterStatus('Leasing application link coming soon.'));
-        actions.appendChild(apply);
         if (footer) {
-            footer.appendChild(actions);
+            footer.appendChild(apply);
         } else {
+            const actions = document.createElement('div');
+            actions.className = 'unit-detail-actions';
+            actions.appendChild(apply);
             content.appendChild(actions);
         }
 
@@ -4370,7 +4387,6 @@
 
     function closeUnitDetail({ clearSelection = true } = {}) {
         document.getElementById('unitDetailBackdrop')?.classList.remove('active');
-        document.getElementById('unitDetailContent')?.replaceChildren();
         document.getElementById('unitDetailFooter')?.replaceChildren();
         if (clearSelection) {
             renterFloorplanState.selectedUnitNumber = null;
