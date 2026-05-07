@@ -334,22 +334,49 @@ function makeStackCubeMesh(cornersXz, bottomY, topY, unitNumber, levelBase) {
 }
 
 function makeUnitLabelSprite(text) {
+  // Match the on-screen waypoint pill (`.tapdot-label-bubble`):
+  //   - fully rounded ("border-radius: 9999px")
+  //   - translucent dark glass that mimics `rgba(255,255,255,0.25)` over a
+  //     `backdrop-filter: blur(20px)` (canvases can't backdrop-blur, so we
+  //     fake it with a dark base + a soft white wash)
+  //   - subtle diagonal highlight ring matching the CSS ::before gradient
+  //   - white text in -apple-system / SF Pro / Helvetica Neue, weight 600
   const canvas = document.createElement('canvas');
   canvas.width = 256;
   canvas.height = 128;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = 'rgba(20, 20, 20, 0.72)';
-  roundRect(ctx, 26, 34, 204, 60, 18);
+
+  const pillX = 14;
+  const pillY = 30;
+  const pillW = canvas.width - pillX * 2;
+  const pillH = canvas.height - pillY * 2 + 0;
+  const pillR = pillH / 2;
+
+  ctx.fillStyle = 'rgba(28, 30, 36, 0.62)';
+  roundRect(ctx, pillX, pillY, pillW, pillH, pillR);
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.82)';
-  ctx.lineWidth = 4;
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.10)';
+  roundRect(ctx, pillX, pillY, pillW, pillH, pillR);
+  ctx.fill();
+
+  const borderGrad = ctx.createLinearGradient(pillX, pillY, pillX + pillW, pillY + pillH);
+  borderGrad.addColorStop(0, 'rgba(255, 255, 255, 0.46)');
+  borderGrad.addColorStop(0.41, 'rgba(255, 255, 255, 0)');
+  borderGrad.addColorStop(0.57, 'rgba(255, 255, 255, 0)');
+  borderGrad.addColorStop(1, 'rgba(255, 255, 255, 0.46)');
+  ctx.strokeStyle = borderGrad;
+  ctx.lineWidth = 2;
+  roundRect(ctx, pillX + 1, pillY + 1, pillW - 2, pillH - 2, pillR - 1);
   ctx.stroke();
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '700 42px Helvetica, Arial, sans-serif';
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+  ctx.font = '600 36px -apple-system, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(String(text), 128, 65);
+  ctx.fillText(String(text), canvas.width / 2, canvas.height / 2 + 1);
+
   const texture = new CanvasTexture(canvas);
   const material = new SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false });
   const sprite = new Sprite(material);
