@@ -2456,27 +2456,33 @@
         .bed-filter-tabs {
             box-shadow: var(--rf-category-shadow);
             border-radius: var(--rf-radius-pill);
-            padding: 5px;
-            gap: 4px;
+            /* Extra vertical inset so the selected pill never kisses the outer hairline */
+            padding: 10px 7px;
+            gap: 6px;
             background: rgba(255, 255, 255, 0.02);
             display: flex;
-            align-items: stretch;
+            align-items: center;
             overflow: hidden;
         }
         .bed-filter-tab {
             flex: 1 1 0;
             min-width: 0;
-            height: 38px;
+            min-height: 44px;
+            height: auto;
             border-radius: 999px;
             background: transparent;
             color: var(--rf-text-soft);
-            font: 600 13px/38px -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+            font: 600 13px/1.22 -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
             letter-spacing: -0.005em;
             transition: background 200ms ease, color 200ms ease, transform 140ms ease;
             border: 0;
             text-align: center;
             cursor: pointer;
-            padding: 0 12px;
+            padding: 10px 12px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-transform: none;
         }
         .bed-filter-tab:hover { color: var(--rf-text); background: rgba(255, 255, 255, 0.04); }
