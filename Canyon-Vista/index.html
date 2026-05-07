@@ -2073,7 +2073,7 @@
                 box-shadow: 0 0 0 2px rgba(114, 245, 155, 0.32), 0 14px 36px rgba(0, 0, 0, 0.34);
             }
             .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list.needs-selection::after {
-                content: "Select a unit";
+                content: "Select a Unit";
                 position: fixed;
                 left: 120px;
                 top: calc(100dvh - 100px - env(safe-area-inset-bottom, 0px));
@@ -2796,7 +2796,7 @@
         }
         .mobile-unit-action:active { transform: translateY(0) scale(0.98); }
 
-        /* "see available units" CTA — pure white, no green */
+        /* "See Available Units" CTA — pure white, no green */
         .mobile-availability-button {
             background: var(--rf-primary) !important;
             color: var(--rf-on-primary) !important;
@@ -2846,7 +2846,7 @@
             .renter-floorplan-panel {
                 padding: 14px 14px 0;
             }
-            /* Pre-selection state: anchor the "see available units" pill to
+            /* Pre-selection state: anchor the "See Available Units" pill to
                the BOTTOM of the screen so the entire upper viewport is open
                canvas / 3D. The panel root collapses to button height so it
                doesn't visually obstruct anything above it. */
@@ -3152,7 +3152,7 @@
         }
 
         /* ---------- v2 final cleanup: kill every remaining green/blue token ---------- */
-        /* "Select a unit" callout pill (was bright green) → neutral white */
+        /* "Select a Unit" callout pill (was bright green) → neutral white */
         .renter-floorplan-panel.collapsed:not(.mobile-selector-open) .available-unit-list.needs-selection {
             border-color: rgba(255, 255, 255, 0.45) !important;
             box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.32) inset, 0 14px 36px rgba(0, 0, 0, 0.34) !important;
@@ -3317,21 +3317,21 @@
         <div class="stack-unit-search-row">
             <label class="room-lookup-label" for="stackUnitSearchInput">3D Unit</label>
             <input id="stackUnitSearchInput" class="stack-unit-search-input" type="text" inputmode="numeric" placeholder="Search" autocomplete="off">
-            <button id="stackUnitSearchClear" class="room-lookup-clear" type="button" aria-label="Clear 3D unit search" title="Clear 3D unit search">x</button>
+            <button id="stackUnitSearchClear" class="room-lookup-clear" type="button" aria-label="Clear 3D unit search" title="Clear 3D unit search">×</button>
         </div>
         <div id="stackUnitDropdown" class="stack-unit-dropdown" role="listbox" aria-label="3D unit results"></div>
     </div>
 
     <section id="renterFloorplanPanel" class="renter-floorplan-panel" aria-live="polite">
-        <button id="mobileAvailabilityButton" class="mobile-availability-button" type="button">see available units</button>
-        <button id="mobileFloorplanClose" class="mobile-floorplan-close" type="button" aria-label="Close floorplan selector"></button>
+        <button id="mobileAvailabilityButton" class="mobile-availability-button" type="button" aria-label="See Available Units">See Available Units</button>
+        <button id="mobileFloorplanClose" class="mobile-floorplan-close" type="button" aria-label="Close floor plan selector"></button>
         <div class="renter-floorplan-title">
-            <h1>Find your floorplan</h1>
-            <div id="renterFloorplanCount" class="renter-floorplan-count">Loading</div>
+            <h1>Find Your Floor Plan</h1>
+            <div id="renterFloorplanCount" class="renter-floorplan-count">Loading…</div>
         </div>
-        <div id="bedFilterTabs" class="bed-filter-tabs" role="group" aria-label="Bedroom count"></div>
+        <div id="bedFilterTabs" class="bed-filter-tabs" role="group" aria-label="Bedrooms"></div>
         <div id="floorplanResults" class="floorplan-results"></div>
-        <button id="changeFloorplanButton" class="change-floorplan-button" type="button">Select a different floorplan</button>
+        <button id="changeFloorplanButton" class="change-floorplan-button" type="button" aria-label="Select a different floor plan">Select a Different Floor Plan</button>
         <div id="availableUnitList" class="available-unit-list"></div>
         <div id="mobileUnitActions" class="mobile-unit-actions">
             <button id="mobileSeeDetailsButton" class="mobile-unit-action details" type="button">View Details</button>
@@ -3728,13 +3728,14 @@
         const value = Number(beds);
         if (value === 0) return 'Studio';
         if (value === 1) return '1 Bed';
-        return `${value} Bed`;
+        return `${value} Beds`;
     }
 
     function bathLabel(baths) {
         const value = Number(baths);
         if (!Number.isFinite(value)) return '';
-        return `${value % 1 === 0 ? String(value) : String(value)} Bath`;
+        const n = value % 1 === 0 ? String(value) : String(value);
+        return `${n} ${value === 1 ? 'Bath' : 'Baths'}`;
     }
 
     function formatCurrency(value) {
@@ -3747,7 +3748,7 @@
         const minValue = Number(min);
         const maxValue = Number(max);
         if (!Number.isFinite(minValue)) return '';
-        if (Number.isFinite(maxValue) && maxValue !== minValue) return `${minValue}-${maxValue} sq ft`;
+        if (Number.isFinite(maxValue) && maxValue !== minValue) return `${minValue}–${maxValue} sq ft`;
         return `${minValue} sq ft`;
     }
 
@@ -3755,7 +3756,7 @@
         const status = document.getElementById('renterFloorplanStatus');
         if (status) {
             status.textContent = text || '';
-            if (text !== 'please select a unit to see details.') {
+            if (text !== 'Please select a unit to view details.') {
                 status.classList.remove('mobile-prompt-visible');
             }
         }
@@ -3799,7 +3800,7 @@
         stopSelectedUnitOrbit();
         document.getElementById('availableUnitList')?.classList.remove('needs-selection');
         document.getElementById('renterFloorplanStatus')?.classList.remove('mobile-prompt-visible');
-        window.__roomKmlOverlay?.clearStackSelection?.({ statusText: 'Choose a floorplan to highlight available units' });
+        window.__roomKmlOverlay?.clearStackSelection?.({ statusText: 'Choose a floor plan to highlight available units.' });
         if (typeof setActiveHole === 'function') {
             setActiveHole(activeHoleIndex || 0, { resetCamera: true });
         }
@@ -3809,11 +3810,11 @@
         renderBedFilters();
         renderFloorplanCards();
         renderAvailableUnitList();
-        setRenterStatus('Select a floorplan to highlight available units.');
+        setRenterStatus('Select a floor plan to highlight available units.');
     }
 
     function promptMobileUnitSelection() {
-        setRenterStatus('please select a unit to see details.');
+        setRenterStatus('Please select a unit to view details.');
         document.getElementById('renterFloorplanStatus')?.classList.add('mobile-prompt-visible');
         const list = document.getElementById('availableUnitList');
         if (!list) return;
@@ -4007,18 +4008,18 @@
         if (!imageUrl) {
             const placeholder = document.createElement('div');
             placeholder.className = 'floorplan-thumb floorplan-thumb-placeholder';
-            placeholder.textContent = 'No image';
+            placeholder.textContent = 'No Image';
             return placeholder;
         }
         const img = document.createElement('img');
         img.className = 'floorplan-thumb';
         img.src = imageUrl;
-        img.alt = `${plan.floorplan_name} floorplan`;
+        img.alt = `${plan.floorplan_name} floor plan`;
         img.loading = 'lazy';
         img.addEventListener('error', () => {
             const placeholder = document.createElement('div');
             placeholder.className = 'floorplan-thumb floorplan-thumb-placeholder';
-            placeholder.textContent = 'Image unavailable';
+            placeholder.textContent = 'Image Unavailable';
             img.replaceWith(placeholder);
         }, { once: true });
         return img;
@@ -4049,11 +4050,11 @@
                 closeUnitDetail({ clearSelection: false });
                 stopSelectedUnitOrbit();
                 openMobileFloorplanSelector();
-                window.__roomKmlOverlay?.clearStackSelection?.({ statusText: 'Choose a floorplan to highlight available units' });
+                window.__roomKmlOverlay?.clearStackSelection?.({ statusText: 'Choose a floor plan to highlight available units.' });
                 renderBedFilters();
                 renderFloorplanCards();
                 renderAvailableUnitList();
-                setRenterStatus('Select a floorplan to highlight available units.');
+                setRenterStatus('Select a floor plan to highlight available units.');
             });
             tabs.appendChild(button);
         });
@@ -4081,7 +4082,7 @@
         closeUnitDetail({ clearSelection: false });
         renderFloorplanCards();
         renderAvailableUnitList();
-        setRenterStatus(`Loading available ${plan.floorplan_name} units...`);
+        setRenterStatus(`Loading available ${plan.floorplan_name} units…`);
 
         try {
             const [overlay, units] = await Promise.all([
@@ -4095,11 +4096,11 @@
                 renterFloorplanState.selectedUnitNumber = String(unitNumbers[0]);
             }
             if (!overlay) {
-                setRenterStatus('3D floorplan overlay is still loading.');
+                setRenterStatus('The 3D floor plan overlay is still loading.');
                 return;
             }
             overlay.selectStackUnits(unitNumbers, {
-                statusText: `Highlighted ${unitNumbers.length} available ${plan.floorplan_name} unit${unitNumbers.length === 1 ? '' : 's'}`,
+                statusText: `${unitNumbers.length} available ${plan.floorplan_name} unit${unitNumbers.length === 1 ? '' : 's'} highlighted.`,
             });
             overlay.setSelectedStackCubeOpacity?.(renterFloorplanState.highlightOpacity);
             if (shouldAutoSelectSingleUnit) {
@@ -4115,13 +4116,13 @@
                 if (!isMobileRenterLayout()) {
                     openUnitDetail(unitNumbers[0], { focusCamera: false });
                 }
-                setRenterStatus(`${plan.floorplan_name} unit ${unitNumbers[0]} selected.`);
+                setRenterStatus(`${plan.floorplan_name} Unit ${unitNumbers[0]} selected.`);
             } else {
-                setRenterStatus(`${unitNumbers.length} available ${plan.floorplan_name} units highlighted.`);
+                setRenterStatus(`${unitNumbers.length} ${plan.floorplan_name} units highlighted in 3D.`);
             }
         } catch (error) {
             console.warn('Failed to highlight available units', error);
-            setRenterStatus('Could not load available units for that floorplan.');
+            setRenterStatus('Unable to load available units for this floor plan.');
         }
     }
 
@@ -4136,12 +4137,12 @@
         const collapsed = !!activePlan;
         if (panel) panel.classList.toggle('collapsed', collapsed);
         const title = panel?.querySelector('.renter-floorplan-title h1');
-        if (title) title.textContent = collapsed ? activePlan.floorplan_name : 'Find your floorplan';
+        if (title) title.textContent = collapsed ? activePlan.floorplan_name : 'Find Your Floor Plan';
         if (changeButton) changeButton.style.display = collapsed ? '' : 'none';
         const plans = collapsed
             ? [activePlan]
             : renterFloorplanState.floorplans.filter((plan) => Number(plan.beds) === renterFloorplanState.selectedBeds);
-        if (count) count.textContent = `${plans.length} option${plans.length === 1 ? '' : 's'}`;
+        if (count) count.textContent = `${plans.length} floor plan${plans.length === 1 ? '' : 's'}`;
 
         plans.forEach((plan) => {
             const card = document.createElement('button');
@@ -4170,7 +4171,7 @@
             const availability = document.createElement('div');
             availability.className = 'floorplan-availability';
             const availableCount = Number(plan.available_count || 0);
-            availability.textContent = `${availableCount} available`;
+            availability.textContent = `${availableCount} ${availableCount === 1 ? 'unit' : 'units'} available`;
             body.appendChild(availability);
 
             card.appendChild(body);
@@ -4178,7 +4179,7 @@
             results.appendChild(card);
         });
 
-        if (!plans.length) setRenterStatus('No floorplans found for that bedroom count.');
+        if (!plans.length) setRenterStatus('No floor plans match that bedroom count.');
     }
 
     function renderAvailableUnitList() {
@@ -4208,7 +4209,7 @@
 
             const price = document.createElement('span');
             price.className = 'available-unit-price';
-            price.textContent = unit.rent ? formatCurrency(unit.rent) : 'Price pending';
+            price.textContent = unit.rent ? formatCurrency(unit.rent) : 'Price Pending';
             card.appendChild(price);
 
             card.addEventListener('click', () => {
@@ -4231,11 +4232,11 @@
         closeUnitDetail({ clearSelection: false });
         stopSelectedUnitOrbit();
         openMobileFloorplanSelector();
-        window.__roomKmlOverlay?.clearStackSelection?.({ statusText: 'Choose a floorplan to highlight available units' });
+        window.__roomKmlOverlay?.clearStackSelection?.({ statusText: 'Choose a floor plan to highlight available units.' });
         renderBedFilters();
         renderFloorplanCards();
         renderAvailableUnitList();
-        setRenterStatus('Select a floorplan to highlight available units.');
+        setRenterStatus('Select a floor plan to highlight available units.');
     }
 
     function featureList(plan) {
@@ -4279,7 +4280,7 @@
             const image = document.createElement('img');
             image.className = 'unit-detail-image';
             image.src = imageUrl;
-            image.alt = `${plan.floorplan_name} floorplan`;
+            image.alt = `${plan.floorplan_name} floor plan`;
             content.appendChild(image);
         }
 
@@ -4292,7 +4293,8 @@
         header.appendChild(title);
         const price = document.createElement('div');
         price.className = 'unit-detail-price';
-        price.textContent = `Starting from: ${formatCurrency(unit.rent || plan.starting_price) || 'Contact us'}`;
+        const priceAmount = formatCurrency(unit.rent || plan.starting_price);
+        price.textContent = priceAmount ? `Starting at ${priceAmount}` : 'Contact us for pricing.';
         header.appendChild(price);
         content.appendChild(header);
 
@@ -4325,7 +4327,7 @@
         apply.type = 'button';
         apply.className = 'apply-now-button';
         apply.textContent = 'Apply Now';
-        apply.addEventListener('click', () => setRenterStatus('Application link coming soon.'));
+        apply.addEventListener('click', () => setRenterStatus('Leasing application link coming soon.'));
         actions.appendChild(apply);
         content.appendChild(actions);
 
@@ -4368,10 +4370,10 @@
             renterFloorplanState.selectedBeds = availableBeds.includes(1) ? 1 : Math.min(...availableBeds);
             renderBedFilters();
             renderFloorplanCards();
-            setRenterStatus('Select a floorplan to highlight available units.');
+            setRenterStatus('Select a floor plan to highlight available units.');
         } catch (error) {
             console.warn('Failed to load Canyon Vista floorplans', error);
-            setRenterStatus('Could not load floorplans from Supabase.');
+            setRenterStatus('Unable to load floor plans.');
         }
     }
 
@@ -5028,7 +5030,7 @@
     }).catch(err => {
         console.warn('unit-kml-overlay failed to load', err);
         const roomLookupStatus = document.getElementById('roomLookupStatus');
-        if (roomLookupStatus) roomLookupStatus.textContent = 'Rooms unavailable';
+        if (roomLookupStatus) roomLookupStatus.textContent = 'Rooms Unavailable';
     });
 
     controls.addEventListener('change', () => {
